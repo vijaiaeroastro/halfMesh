@@ -29,4 +29,4 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          ctest --output-on-failure --parallel --config Release
+          ctest --output-on-failure --parallel -C Release
