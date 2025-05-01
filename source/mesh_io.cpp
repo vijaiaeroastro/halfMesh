@@ -6,21 +6,39 @@
 
 namespace HalfMesh {
     void Mesh::save(const std::string &fn) const {
-        auto type = guess_mesh_format(fn);
-        if (type == MeshType::Gmsh) write_gmsh(fn);
-        else if (type == MeshType::Obj) write_obj(fn);
-        else if (type == MeshType::Binary) write_binary(fn);
-        else if (type == MeshType::Vtk) write_vtk(fn);
-        else std::cerr << "Unknown format: " << fn << "\n";
+        switch (guess_mesh_format(fn)) {
+            case MeshType::Gmsh:
+                write_gmsh(fn);
+                break;
+            case MeshType::Stl:
+                write_stl_binary(fn);
+                break;
+            case MeshType::Binary:
+                write_binary(fn);
+                break;
+            case MeshType::Vtk:
+                write_vtk(fn);
+                break;
+            default:
+                std::cerr << "Unknown format: " << fn << "\n";
+                break;
+        }
     }
 
-    void Mesh::read(const std::string &fn) {
-        auto type = guess_mesh_format(fn);
-        if (type == MeshType::Gmsh) read_gmsh(fn);
-        else if (type == MeshType::Obj) read_obj(fn);
-        else if (type == MeshType::Binary) read_binary(fn);
-        else std::cerr << "Unknown format: " << fn << "\n";
-        complete_mesh();
+    void Mesh::read(const std::string &filename) {
+        switch (guess_mesh_format(filename)) {
+            case MeshType::Gmsh:
+                read_gmsh(filename);
+                break;
+            case MeshType::Stl:
+                read_stl(filename);
+                break;
+            case MeshType::Binary:
+                read_binary(filename);
+                break;
+            default:
+                std::cerr << "Unknown format: " << filename << std::endl;
+        }
     }
 
     // — Gmsh —
@@ -67,30 +85,7 @@ namespace HalfMesh {
                 add_face(tmp[n1], tmp[n2], tmp[n3]);
             }
         }
-    }
-
-    void Mesh::read_obj(const std::string &fn) {
-        clear_data();
-        std::ifstream in(fn);
-        std::string line;
-        std::vector<VertexPtr> vtx;
-        while (std::getline(in, line)) {
-            if (line.rfind("v ", 0) == 0) {
-                std::istringstream iss(line.substr(2));
-                double x, y, z;
-                if (iss >> x >> y >> z)
-                    vtx.push_back(add_vertex(x, y, z));
-            }
-            if (line.rfind("f ", 0) == 0) {
-                std::istringstream iss(line.substr(2));
-                unsigned i1, i2, i3;
-                char slash;
-                if ((iss >> i1 >> slash >> slash >> i2 >> slash >> slash >> i3)
-                    || (iss >> i1 >> i2 >> i3)) {
-                    add_face(vtx[i1 - 1], vtx[i2 - 1], vtx[i3 - 1]);
-                }
-            }
-        }
+        complete_mesh();
     }
 
     void Mesh::read_binary(const std::string &fn) {
@@ -109,6 +104,7 @@ namespace HalfMesh {
         vertex_data_store = js["VERTEX_PROPERTIES"];
         edge_data_store = js["EDGE_PROPERTIES"];
         face_data_store = js["FACE_PROPERTIES"];
+        complete_mesh();
     }
 
     // — Writers —
@@ -147,11 +143,15 @@ namespace HalfMesh {
             js["FACES"].push_back({a->handle(), b->handle(), c->handle()});
         }
         js["VERTEX_PROPERTIES"] = vertex_data_store;
-        js["EDGE_PROPERTIES"] = edge_data_store;
-        js["FACE_PROPERTIES"] = face_data_store;
+        js["EDGE_PROPERTIES"]   = edge_data_store;
+        js["FACE_PROPERTIES"]   = face_data_store;
+
         auto buf = nlohmann::json::to_bson(js);
         std::ofstream out(fn, std::ios::binary);
-        out.write(reinterpret_cast<char *>(buf.data()), buf.size());
+        out.write(
+            reinterpret_cast<const char*>(buf.data()),
+            static_cast<std::streamsize>(buf.size())
+        );
     }
 
     void Mesh::write_vtk(const std::string &fn) const {
@@ -164,6 +164,198 @@ namespace HalfMesh {
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
             out << "3 " << a->handle() << " " << b->handle() << " " << c->handle() << "\n";
+        }
+    }
+
+    //
+    // Write ASCII STL
+    //
+    void Mesh::write_stl_ascii(const std::string &fn) const {
+        std::ofstream out(fn);
+        if (!out) {
+            std::cerr << "Can't open " << fn << "\n";
+            return;
+        }
+        out << "solid halfMesh\n";
+        for (auto &f: faces_) {
+            auto [a,b,c] = f->get_vertices();
+            // normal
+            Vertex n = get_face_normal(f->handle());
+            double nx = n.get_x(), ny = n.get_y(), nz = n.get_z();
+            double len = std::sqrt(nx * nx + ny * ny + nz * nz);
+            if (len > 0) {
+                nx /= len;
+                ny /= len;
+                nz /= len;
+            }
+            out << "  facet normal " << nx << " " << ny << " " << nz << "\n";
+            out << "    outer loop\n";
+            out << "      vertex " << a->get_x() << " " << a->get_y() << " " << a->get_z() << "\n";
+            out << "      vertex " << b->get_x() << " " << b->get_y() << " " << b->get_z() << "\n";
+            out << "      vertex " << c->get_x() << " " << c->get_y() << " " << c->get_z() << "\n";
+            out << "    endloop\n";
+            out << "  endfacet\n";
+        }
+        out << "endsolid halfMesh\n";
+    }
+
+    //
+    // Write binary STL
+    //
+    void Mesh::write_stl_binary(const std::string &fn) const {
+        std::ofstream out(fn, std::ios::binary);
+        if (!out) {
+            std::cerr << "Can't open " << fn << "\n";
+            return;
+        }
+        // 80-byte header
+        char header[80] = {};
+        std::strncpy(header, "HalfMesh binary STL", sizeof(header));
+        out.write(header, 80);
+        // tri count
+        auto count = static_cast<uint32_t>(faces_.size());
+        out.write(reinterpret_cast<char *>(&count), 4);
+        // each tri
+        for (auto &f: faces_) {
+            auto [a,b,c] = f->get_vertices();
+            // normal
+            Vertex n = get_face_normal(f->handle());
+            double nx = n.get_x(), ny = n.get_y(), nz = n.get_z();
+            if (double len = std::sqrt(nx * nx + ny * ny + nz * nz); len > 0) {
+                nx /= len;
+                ny /= len;
+                nz /= len;
+            }
+            out.write(reinterpret_cast<char *>(&nx), 4);
+            out.write(reinterpret_cast<char *>(&ny), 4);
+            out.write(reinterpret_cast<char *>(&nz), 4);
+            // vertices
+            auto writev = [&](const VertexPtr &v) {
+                double x = v->get_x(), y = v->get_y(), z = v->get_z();
+                out.write(reinterpret_cast<char *>(&x), 4);
+                out.write(reinterpret_cast<char *>(&y), 4);
+                out.write(reinterpret_cast<char *>(&z), 4);
+            };
+            writev(a);
+            writev(b);
+            writev(c);
+            // attribute bytes
+            uint16_t attr = 0;
+            out.write(reinterpret_cast<char *>(&attr), 2);
+        }
+    }
+
+    //
+    // Read STL (auto–detect ASCII vs binary)
+    //
+    void Mesh::read_stl(const std::string &fn) {
+        // peek first 512 bytes
+        std::ifstream in(fn, std::ios::binary);
+        if (!in) {
+            std::cerr << "Can't open " << fn << "\n";
+            return;
+        }
+        char buf[512] = {};
+        in.read(buf, sizeof(buf));
+        std::string head(buf, static_cast<size_t>(in.gcount()));
+        in.close();
+
+        // in the first 512 bytes, assume ASCII
+        if (head.rfind("solid", 0) == 0 && head.find("facet") != std::string::npos) {
+            read_stl_ascii(fn);
+        } else {
+            read_stl_binary(fn);
+        }
+        complete_mesh();
+    }
+
+    //
+    // Read ASCII STL
+    //
+    void Mesh::read_stl_ascii(const std::string &fn) {
+        clear_data();
+        std::ifstream in(fn);
+        if (!in) {
+            std::cerr << "Can't open " << fn << "\n";
+            return;
+        }
+
+        // temporary storage of unique vertices
+        std::map<std::tuple<double, double, double>, VertexPtr> vmap;
+        std::string line;
+        std::vector<VertexPtr> tri;
+
+        auto parse_vertex_line = [&](const std::string &l) {
+            std::istringstream iss(l);
+            std::string tmp;
+            double x, y, z;
+            if (!(iss >> tmp >> x >> y >> z)) return VertexPtr();
+            auto key = std::make_tuple(x, y, z);
+            auto it = vmap.find(key);
+            if (it != vmap.end()) return it->second;
+            auto v = add_vertex(x, y, z);
+            vmap[key] = v;
+            return v;
+        };
+
+        while (std::getline(in, line)) {
+            // trim leading spaces
+            auto p = line.find_first_not_of(" \t");
+            if (p != std::string::npos) line = line.substr(p);
+
+            if (line.rfind("vertex ", 0) == 0) {
+                if (auto v = parse_vertex_line(line)) tri.push_back(v);
+            } else if (line.rfind("endfacet", 0) == 0) {
+                if (tri.size() == 3) add_face(tri[0], tri[1], tri[2]);
+                tri.clear();
+            }
+        }
+    }
+
+    //
+    // Read binary STL
+    //
+    void Mesh::read_stl_binary(const std::string &fn) {
+        clear_data();
+        std::ifstream in(fn, std::ios::binary);
+        if (!in) {
+            std::cerr << "Can't open " << fn << "\n";
+            return;
+        }
+        // header
+        char header[80];
+        in.read(header, 80);
+        uint32_t triCount;
+        in.read(reinterpret_cast<char *>(&triCount), 4);
+
+        // map to dedupe
+        std::map<std::tuple<double, double, double>, VertexPtr> vmap;
+
+        auto get_vertex = [&](double x, double y, double z) {
+            auto key = std::make_tuple(x, y, z);
+            auto it = vmap.find(key);
+            if (it != vmap.end()) return it->second;
+            auto v = add_vertex(x, y, z);
+            vmap[key] = v;
+            return v;
+        };
+
+        for (uint32_t i = 0; i < triCount; ++i) {
+            double nx, ny, nz;
+            in.read(reinterpret_cast<char *>(&nx), 4);
+            in.read(reinterpret_cast<char *>(&ny), 4);
+            in.read(reinterpret_cast<char *>(&nz), 4);
+            std::array<VertexPtr, 3> tri;
+            for (int k = 0; k < 3; ++k) {
+                double x, y, z;
+                in.read(reinterpret_cast<char *>(&x), 4);
+                in.read(reinterpret_cast<char *>(&y), 4);
+                in.read(reinterpret_cast<char *>(&z), 4);
+                tri[k] = get_vertex(x, y, z);
+            }
+            // skip attribute bytes
+            in.seekg(2, std::ios::cur);
+            add_face(tri[0], tri[1], tri[2]);
         }
     }
 } // namespace HalfMesh

@@ -75,11 +75,11 @@ int main() {
               << (mesh.is_multiply_connected() ? "Yes" : "No")
               << "\n\n";
 
-    loop_through_half_edges_inside_a_face(mesh);
-    std::cout << "\n";
+    // loop_through_half_edges_inside_a_face(mesh);
+    // std::cout << "\n";
 
-    loop_through_vertices_in_a_mesh(mesh);
-    std::cout << "\n";
+    // loop_through_vertices_in_a_mesh(mesh);
+    // std::cout << "\n";
 
     detect_boundary_edges(mesh);
     detect_boundary_half_edges(mesh);

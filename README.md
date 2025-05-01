@@ -1,4 +1,4 @@
-# HalfMesh
+# halfMesh
 A Simple and flexible half edge data structure
 
 This is a very simple Half Edge data structure implementation. It is currently only tailored for

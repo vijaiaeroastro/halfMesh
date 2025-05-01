@@ -14,7 +14,7 @@ namespace HalfMesh {
     // --- Mesh I/O formats ---
     enum class MeshType {
         Gmsh       = 100,
-        Obj        = 200,
+        Stl        = 200,
         Binary     = 300,
         Vtk        = 500,
         Unknown    = 999
@@ -42,7 +42,7 @@ namespace HalfMesh {
     inline MeshType guess_mesh_format(const std::string& filename) {
         auto s = strutil::to_lower(filename);
         if (strutil::ends_with(s, ".msh")) return MeshType::Gmsh;
-        if (strutil::ends_with(s, ".obj")) return MeshType::Obj;
+        if (strutil::ends_with(s, ".stl")) return MeshType::Stl;
         if (strutil::ends_with(s, ".bm" )) return MeshType::Binary;
         if (strutil::ends_with(s, ".vtk")) return MeshType::Vtk;
         return MeshType::Unknown;
