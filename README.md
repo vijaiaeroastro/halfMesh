@@ -31,7 +31,7 @@ A simple and flexible half‐edge data structure for triangular meshes, with bui
 #include "mesh.hpp"
 
 int main() {
-    HalfMesh::Mesh mesh;
+    halfMesh::triMesh mesh;
 
     // Add vertices
     auto v1 = mesh.add_vertex(0.0, 0.0, 0.0);
