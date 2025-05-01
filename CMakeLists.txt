@@ -18,6 +18,7 @@ set(HDRS
 set(SRCS
         source/mesh_core.cpp
         source/mesh_algorithms.cpp
+        source/mesh_traversers.cpp
         source/mesh_geometry.cpp
         source/mesh_io.cpp)
 
