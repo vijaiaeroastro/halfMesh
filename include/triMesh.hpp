@@ -18,25 +18,25 @@ namespace halfMesh {
 
 class triMesh {
 public:
-    using VertexPtr   = std::shared_ptr<vertex>;
-    using HalfEdgePtr = std::shared_ptr<halfedge>;
-    using EdgePtr     = std::shared_ptr<edge>;
-    using FacePtr     = std::shared_ptr<face>;
+    using vertexPtr   = std::shared_ptr<vertex>;
+    using halfEdgePtr = std::shared_ptr<halfedge>;
+    using edgePtr     = std::shared_ptr<edge>;
+    using facePtr     = std::shared_ptr<face>;
 
     triMesh();
     ~triMesh();
 
     // Core mutators
-    VertexPtr   add_vertex(double x, double y, double z);
-    HalfEdgePtr add_half_edge(const VertexPtr& v1,
-                              const VertexPtr& v2,
-                              const FacePtr&   f);
-    EdgePtr     add_edge(const VertexPtr& v1,
-                         const VertexPtr& v2,
-                         const FacePtr&   f);
-    FacePtr     add_face(const VertexPtr& v1,
-                         const VertexPtr& v2,
-                         const VertexPtr& v3);
+    vertexPtr   add_vertex(double x, double y, double z);
+    halfEdgePtr add_half_edge(const vertexPtr& v1,
+                              const vertexPtr& v2,
+                              const facePtr&   f);
+    edgePtr     add_edge(const vertexPtr& v1,
+                         const vertexPtr& v2,
+                         const facePtr&   f);
+    facePtr     add_face(const vertexPtr& v1,
+                         const vertexPtr& v2,
+                         const vertexPtr& v3);
     void        complete_mesh();
 
     // I/O
@@ -44,9 +44,14 @@ public:
     void read(const std::string& filename);
 
     // Traversals & topology
-    HalfEdgePtr get_next_half_edge(const HalfEdgePtr& he, const FacePtr& f) const;
-    HalfEdgePtr get_previous_half_edge(const HalfEdgePtr& he, const FacePtr& f) const;
-    FacePtr     get_one_neighbour_face(const FacePtr& f) const;
+    halfEdgePtr get_next_half_edge(const halfEdgePtr& he, const facePtr& f) const;
+    halfEdgePtr get_previous_half_edge(const halfEdgePtr& he, const facePtr& f) const;
+    facePtr     get_one_neighbour_face(const facePtr& f) const;
+    std::vector<facePtr> face_adjacent(const facePtr& f) const;
+    std::vector<facePtr> vertex_face_ring(const vertexPtr& v) const;
+    std::vector<vertexPtr> vertex_one_ring(const vertexPtr& v) const;
+
+    // Some algorithms
     bool        is_multiply_connected() const;
     unsigned    compute_number_of_holes() const;
 
@@ -123,30 +128,30 @@ public:
     }
 
     // Helpers
-    VertexPtr   get_vertex(unsigned h)    const;
-    HalfEdgePtr get_half_edge(unsigned h) const;
-    EdgePtr     get_edge(unsigned h)      const;
-    FacePtr     get_face(unsigned h)      const;
+    vertexPtr   get_vertex(unsigned h)    const;
+    halfEdgePtr get_half_edge(unsigned h) const;
+    edgePtr     get_edge(unsigned h)      const;
+    facePtr     get_face(unsigned h)      const;
 
 
     // --- Bulk accessors definitions ---
 
-    const std::vector<VertexPtr>&
+    const std::vector<vertexPtr>&
     get_vertices() const {
         return vertices_;
     }
 
-    const std::vector<HalfEdgePtr>&
+    const std::vector<halfEdgePtr>&
     get_half_edges() const {
         return half_edges_;
     }
 
-    const std::vector<EdgePtr>&
+    const std::vector<edgePtr>&
     get_edges() const {
         return edges_;
     }
 
-    const std::vector<FacePtr>&
+    const std::vector<facePtr>&
     get_faces() const {
         return faces_;
     }
@@ -173,22 +178,22 @@ private:
     void clear_data();
 
     // Ownership
-    std::vector<VertexPtr>   vertices_;
-    std::vector<HalfEdgePtr> half_edges_;
-    std::vector<EdgePtr>     edges_;
-    std::vector<FacePtr>     faces_;
+    std::vector<vertexPtr>   vertices_;
+    std::vector<halfEdgePtr> half_edges_;
+    std::vector<edgePtr>     edges_;
+    std::vector<facePtr>     faces_;
 
     // Handle → object maps
-    std::unordered_map<unsigned, VertexPtr>   handle_to_vertex_;
-    std::unordered_map<unsigned, HalfEdgePtr> handle_to_half_edge_;
-    std::unordered_map<unsigned, EdgePtr>     handle_to_edge_;
-    std::unordered_map<unsigned, FacePtr>     handle_to_face_;
+    std::unordered_map<unsigned, vertexPtr>   handle_to_vertex_;
+    std::unordered_map<unsigned, halfEdgePtr> handle_to_half_edge_;
+    std::unordered_map<unsigned, edgePtr>     handle_to_edge_;
+    std::unordered_map<unsigned, facePtr>     handle_to_face_;
 
     // Connectivity lookups
     EdgeHandleMap    edge_lookup_;
     FaceHandleMap    face_lookup_;
     std::unordered_map<HalfEdgeKey,
-                     HalfEdgePtr,
+                     halfEdgePtr,
                      HalfEdgeKeyHash,
                      HalfEdgeKeyEqual> half_edge_lookup_;
 

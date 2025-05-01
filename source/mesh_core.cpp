@@ -42,7 +42,7 @@ namespace halfMesh {
     }
 
     // Core mutators
-    triMesh::VertexPtr triMesh::add_vertex(double x, double y, double z) {
+    triMesh::vertexPtr triMesh::add_vertex(double x, double y, double z) {
         auto v = std::make_shared<vertex>(x, y, z);
         unsigned h = next_vertex_handle_++;
         v->set_handle(h);
@@ -52,9 +52,9 @@ namespace halfMesh {
         return v;
     }
 
-    triMesh::HalfEdgePtr triMesh::add_half_edge(const VertexPtr &v1,
-                                          const VertexPtr &v2,
-                                          const FacePtr &f) {
+    triMesh::halfEdgePtr triMesh::add_half_edge(const vertexPtr &v1,
+                                          const vertexPtr &v2,
+                                          const facePtr &f) {
         const HalfEdgeKey key{v1->handle(), v2->handle()};
         if (const auto it = half_edge_lookup_.find(key); it != half_edge_lookup_.end())
             return it->second;
@@ -81,9 +81,9 @@ namespace halfMesh {
         return he;
     }
 
-    triMesh::EdgePtr triMesh::add_edge(const VertexPtr &v1,
-                                 const VertexPtr &v2,
-                                 const FacePtr &f) {
+    triMesh::edgePtr triMesh::add_edge(const vertexPtr &v1,
+                                 const vertexPtr &v2,
+                                 const facePtr &f) {
         const auto key = make_edge_key(v1->handle(), v2->handle());
         if (const auto it = edge_lookup_.find(key); it != edge_lookup_.end()) {
             const auto e = handle_to_edge_[it->second];
@@ -111,9 +111,9 @@ namespace halfMesh {
         return e;
     }
 
-    triMesh::FacePtr triMesh::add_face(const VertexPtr &v1,
-                                 const VertexPtr &v2,
-                                 const VertexPtr &v3) {
+    triMesh::facePtr triMesh::add_face(const vertexPtr &v1,
+                                 const vertexPtr &v2,
+                                 const vertexPtr &v3) {
         const auto key = make_face_key(v1->handle(), v2->handle(), v3->handle());
         if (const auto it = face_lookup_.find(key); it != face_lookup_.end())
             return handle_to_face_[it->second];
@@ -158,8 +158,8 @@ namespace halfMesh {
 
 
     // trivial handle‐->object
-    triMesh::VertexPtr triMesh::get_vertex(unsigned h) const { return handle_to_vertex_.at(h); }
-    triMesh::HalfEdgePtr triMesh::get_half_edge(unsigned h) const { return handle_to_half_edge_.at(h); }
-    triMesh::EdgePtr triMesh::get_edge(unsigned h) const { return handle_to_edge_.at(h); }
-    triMesh::FacePtr triMesh::get_face(unsigned h) const { return handle_to_face_.at(h); }
+    triMesh::vertexPtr triMesh::get_vertex(unsigned h) const { return handle_to_vertex_.at(h); }
+    triMesh::halfEdgePtr triMesh::get_half_edge(unsigned h) const { return handle_to_half_edge_.at(h); }
+    triMesh::edgePtr triMesh::get_edge(unsigned h) const { return handle_to_edge_.at(h); }
+    triMesh::facePtr triMesh::get_face(unsigned h) const { return handle_to_face_.at(h); }
 } // namespace HalfMesh

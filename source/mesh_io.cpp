@@ -47,7 +47,7 @@ namespace halfMesh {
         std::ifstream in(fn);
         std::string line;
         bool in_nodes = false, in_elems = false;
-        std::unordered_map<unsigned, VertexPtr> tmp;
+        std::unordered_map<unsigned, vertexPtr> tmp;
         while (std::getline(in, line)) {
             if (line == "$Nodes") {
                 in_nodes = true;
@@ -230,7 +230,7 @@ namespace halfMesh {
             out.write(reinterpret_cast<char *>(&ny), 4);
             out.write(reinterpret_cast<char *>(&nz), 4);
             // vertices
-            auto writev = [&](const VertexPtr &v) {
+            auto writev = [&](const vertexPtr &v) {
                 double x = v->get_x(), y = v->get_y(), z = v->get_z();
                 out.write(reinterpret_cast<char *>(&x), 4);
                 out.write(reinterpret_cast<char *>(&y), 4);
@@ -281,15 +281,15 @@ namespace halfMesh {
         }
 
         // temporary storage of unique vertices
-        std::map<std::tuple<double, double, double>, VertexPtr> vmap;
+        std::map<std::tuple<double, double, double>, vertexPtr> vmap;
         std::string line;
-        std::vector<VertexPtr> tri;
+        std::vector<vertexPtr> tri;
 
         auto parse_vertex_line = [&](const std::string &l) {
             std::istringstream iss(l);
             std::string tmp;
             double x, y, z;
-            if (!(iss >> tmp >> x >> y >> z)) return VertexPtr();
+            if (!(iss >> tmp >> x >> y >> z)) return vertexPtr();
             auto key = std::make_tuple(x, y, z);
             auto it = vmap.find(key);
             if (it != vmap.end()) return it->second;
@@ -329,7 +329,7 @@ namespace halfMesh {
         in.read(reinterpret_cast<char *>(&triCount), 4);
 
         // map to dedupe
-        std::map<std::tuple<double, double, double>, VertexPtr> vmap;
+        std::map<std::tuple<double, double, double>, vertexPtr> vmap;
 
         auto get_vertex = [&](double x, double y, double z) {
             auto key = std::make_tuple(x, y, z);
@@ -345,7 +345,7 @@ namespace halfMesh {
             in.read(reinterpret_cast<char *>(&nx), 4);
             in.read(reinterpret_cast<char *>(&ny), 4);
             in.read(reinterpret_cast<char *>(&nz), 4);
-            std::array<VertexPtr, 3> tri;
+            std::array<vertexPtr, 3> tri;
             for (int k = 0; k < 3; ++k) {
                 double x, y, z;
                 in.read(reinterpret_cast<char *>(&x), 4);
