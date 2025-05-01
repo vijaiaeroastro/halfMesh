@@ -57,4 +57,5 @@ MIT
 
 # Notes
 * Designed to be lightweight and STL‐only; future enhancements may add optional dependencies.
-* Contributions welcome! Feel free to open issues or pull requests.e than happy to add it here in future. Just contact over email.
+* Contributions welcome! Feel free to open issues or pull requests. More than happy to add it here in future. 
+* If you have doubts, contact me over email [halfmesh@kaditham.meshing.engineer](mailto:halfmesh@kaditham.meshing.engineer)
