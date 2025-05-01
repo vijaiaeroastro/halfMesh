@@ -1,85 +1,49 @@
+// half_edge.hpp
 #pragma once
-
-#include <general.hpp>
-#include <vertex.hpp>
-#include <edge.hpp>
-#include <face.hpp>
+#include <common.hpp>
+#include <memory>
+#include <limits>
 
 namespace HalfMesh {
-    // A Half edge structure
+
     class HalfEdge {
     public:
-        HalfEdge(Vertex *_v1, Vertex *_v2) : v1(_v1), v2(_v2) {};
+        HalfEdge(std::shared_ptr<Vertex> a,
+                 std::shared_ptr<Vertex> b)
+          : v1_(a),
+            v2_(b),
+            handle_(std::numeric_limits<unsigned int>::max()),
+            parent_edge_handle_(std::numeric_limits<unsigned int>::max()),
+            parent_face_handle_(std::numeric_limits<unsigned int>::max()),
+            opposing_half_edge_(std::numeric_limits<unsigned int>::max()),
+            boundary_(false)
+        {}
 
-        ~HalfEdge() {};
+        ~HalfEdge() = default;
 
-    public:
-        void set_vertex_one(Vertex *_v1) {
-            v1 = _v1;
-        }
+        //— Accessors ——
+        std::shared_ptr<Vertex> get_vertex_one()   const { return v1_.lock(); }
+        std::shared_ptr<Vertex> get_vertex_two()   const { return v2_.lock(); }
+        unsigned int            handle()          const { return handle_; }
+        unsigned int            get_parent_edge() const { return parent_edge_handle_; }
+        unsigned int            get_parent_face() const { return parent_face_handle_; }
+        unsigned int            get_opposing_half_edge() const { return opposing_half_edge_; }
+        bool                    is_boundary()     const { return boundary_; }
 
-        void set_vertex_two(Vertex *_v2) {
-            v2 = _v2;
-        }
-
-        Vertex *get_vertex_one() {
-            return v1;
-        }
-
-        Vertex *get_vertex_two() {
-            return v2;
-        }
-
-        void set_handle(unsigned int _i) {
-            half_edge_handle = _i;
-        }
-
-        unsigned int handle() {
-            if (this == NULL_HALF_EDGE) {
-                return std::numeric_limits<unsigned int>::max();
-            }
-            return half_edge_handle;
-        }
-
-        void set_parent_edge(unsigned int _i) {
-            parent_edge_handle = _i;
-        }
-
-        unsigned int get_parent_edge() {
-            return parent_edge_handle;
-        }
-
-        void set_parent_face(unsigned int _i) {
-            parent_face_handle = _i;
-        }
-
-        unsigned int get_parent_face() {
-            return parent_face_handle;
-        }
-
-        void set_boundary(bool _boundariness) {
-            boundary_half_edge = _boundariness;
-        }
-
-        bool is_boundary() {
-            return boundary_half_edge;
-        }
-
-        void set_opposing_half_edge(unsigned int _i) {
-            opposing_half_edge = _i;
-        }
-
-        unsigned int get_opposing_half_edge() {
-            return opposing_half_edge;
-        }
-
+        //— Mutators ——
+        void set_handle(unsigned int h)                   { handle_ = h; }
+        void set_parent_edge(unsigned int h)              { parent_edge_handle_  = h; }
+        void set_parent_face(unsigned int h)              { parent_face_handle_  = h; }
+        void set_opposing_half_edge(unsigned int h)       { opposing_half_edge_  = h; }
+        void set_boundary(bool b)                         { boundary_ = b; }
 
     private:
-        Vertex *v1, *v2;
-        unsigned int half_edge_handle;
-        unsigned int parent_edge_handle;
-        unsigned int parent_face_handle;
-        unsigned int opposing_half_edge = std::numeric_limits<unsigned int>::max();
-        bool boundary_half_edge;
+        std::weak_ptr<Vertex>   v1_, v2_;
+        unsigned int            handle_;
+        unsigned int            parent_edge_handle_;
+        unsigned int            parent_face_handle_;
+        unsigned int            opposing_half_edge_;
+        bool                    boundary_;
     };
-}
+
+} // namespace HalfMesh
