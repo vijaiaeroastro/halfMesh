@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "mesh.hpp"
+#include "triMesh.hpp"
 #include <utility>      // for std::swap
 
-namespace HalfMesh {
+namespace halfMesh {
     // Canonicalization helpers (could also live in a detail header)
     inline EdgeKey make_edge_key(unsigned i, unsigned j) {
         if (i > j) std::swap(i, j);
@@ -16,11 +16,11 @@ namespace HalfMesh {
         return {v[0], v[1], v[2]};
     }
 
-    Mesh::Mesh() = default;
+    triMesh::triMesh() = default;
 
-    Mesh::~Mesh() = default;
+    triMesh::~triMesh() = default;
 
-    void Mesh::clear_data() {
+    void triMesh::clear_data() {
         vertices_.clear();
         half_edges_.clear();
         edges_.clear();
@@ -42,8 +42,8 @@ namespace HalfMesh {
     }
 
     // Core mutators
-    Mesh::VertexPtr Mesh::add_vertex(double x, double y, double z) {
-        auto v = std::make_shared<Vertex>(x, y, z);
+    triMesh::VertexPtr triMesh::add_vertex(double x, double y, double z) {
+        auto v = std::make_shared<vertex>(x, y, z);
         unsigned h = next_vertex_handle_++;
         v->set_handle(h);
         vertices_.push_back(v);
@@ -52,14 +52,14 @@ namespace HalfMesh {
         return v;
     }
 
-    Mesh::HalfEdgePtr Mesh::add_half_edge(const VertexPtr &v1,
+    triMesh::HalfEdgePtr triMesh::add_half_edge(const VertexPtr &v1,
                                           const VertexPtr &v2,
                                           const FacePtr &f) {
         const HalfEdgeKey key{v1->handle(), v2->handle()};
         if (const auto it = half_edge_lookup_.find(key); it != half_edge_lookup_.end())
             return it->second;
 
-        auto he = std::make_shared<HalfEdge>(v1, v2);
+        auto he = std::make_shared<halfedge>(v1, v2);
         const unsigned h = next_half_edge_handle_++;
         he->set_handle(h);
         he->set_parent_face(f->handle());
@@ -81,7 +81,7 @@ namespace HalfMesh {
         return he;
     }
 
-    Mesh::EdgePtr Mesh::add_edge(const VertexPtr &v1,
+    triMesh::EdgePtr triMesh::add_edge(const VertexPtr &v1,
                                  const VertexPtr &v2,
                                  const FacePtr &f) {
         const auto key = make_edge_key(v1->handle(), v2->handle());
@@ -95,7 +95,7 @@ namespace HalfMesh {
             return e;
         }
 
-        auto e = std::make_shared<Edge>(v1, v2);
+        auto e = std::make_shared<edge>(v1, v2);
         const unsigned h = next_edge_handle_++;
         e->set_handle(h);
         edges_.push_back(e);
@@ -111,7 +111,7 @@ namespace HalfMesh {
         return e;
     }
 
-    Mesh::FacePtr Mesh::add_face(const VertexPtr &v1,
+    triMesh::FacePtr triMesh::add_face(const VertexPtr &v1,
                                  const VertexPtr &v2,
                                  const VertexPtr &v3) {
         const auto key = make_face_key(v1->handle(), v2->handle(), v3->handle());
@@ -119,7 +119,7 @@ namespace HalfMesh {
             return handle_to_face_[it->second];
 
         // 1) create the Face
-        auto f = std::make_shared<Face>(v1, v2, v3);
+        auto f = std::make_shared<face>(v1, v2, v3);
         const unsigned fh = next_face_handle_++;
         f->set_handle(fh);
         faces_.push_back(f);
@@ -137,7 +137,7 @@ namespace HalfMesh {
         return f;
     }
 
-    void Mesh::complete_mesh() {
+    void triMesh::complete_mesh() {
         if (faces_.empty()) return;
 
         // mark half-edge boundaries
@@ -158,8 +158,8 @@ namespace HalfMesh {
 
 
     // trivial handle‐->object
-    Mesh::VertexPtr Mesh::get_vertex(unsigned h) const { return handle_to_vertex_.at(h); }
-    Mesh::HalfEdgePtr Mesh::get_half_edge(unsigned h) const { return handle_to_half_edge_.at(h); }
-    Mesh::EdgePtr Mesh::get_edge(unsigned h) const { return handle_to_edge_.at(h); }
-    Mesh::FacePtr Mesh::get_face(unsigned h) const { return handle_to_face_.at(h); }
+    triMesh::VertexPtr triMesh::get_vertex(unsigned h) const { return handle_to_vertex_.at(h); }
+    triMesh::HalfEdgePtr triMesh::get_half_edge(unsigned h) const { return handle_to_half_edge_.at(h); }
+    triMesh::EdgePtr triMesh::get_edge(unsigned h) const { return handle_to_edge_.at(h); }
+    triMesh::FacePtr triMesh::get_face(unsigned h) const { return handle_to_face_.at(h); }
 } // namespace HalfMesh

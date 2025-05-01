@@ -1,15 +1,14 @@
 #pragma once
 
 #include <vector>
-#include <strutil.hpp>
 
-namespace HalfMesh {
+namespace halfMesh {
     // Forward declarations
-    class Vertex;
-    class Face;
-    class Edge;
-    class HalfEdge;
-    class Mesh;
+    class vertex;
+    class face;
+    class edge;
+    class halfedge;
+    class triMesh;
 
     // --- Mesh I/O formats ---
     enum class MeshType {
@@ -38,13 +37,44 @@ namespace HalfMesh {
         CouldNotAdd
     };
 
+    // Some string related utilities
+    // Convert a copy of s to lowercase
+    inline std::string to_lower(std::string s) {
+        std::transform(
+            s.begin(), s.end(), s.begin(),
+            [](unsigned char c){ return static_cast<char>(std::tolower(c)); }
+        );
+        return s;
+    }
+
+    // Convert a copy of s to uppercase
+    inline std::string to_upper(std::string s) {
+        std::transform(
+            s.begin(), s.end(), s.begin(),
+            [](unsigned char c){ return static_cast<char>(std::toupper(c)); }
+        );
+        return s;
+    }
+
+    // Does s start with prefix?
+    inline bool starts_with(const std::string& s, const std::string& prefix) {
+        return s.size() >= prefix.size()
+            && std::equal(prefix.begin(), prefix.end(), s.begin());
+    }
+
+    // Does s end with suffix?
+    inline bool ends_with(const std::string& s, const std::string& suffix) {
+        return s.size() >= suffix.size()
+            && std::equal(suffix.rbegin(), suffix.rend(), s.rbegin());
+    }
+
     // Utility to lower-case & detect extensions
     inline MeshType guess_mesh_format(const std::string& filename) {
-        auto s = strutil::to_lower(filename);
-        if (strutil::ends_with(s, ".msh")) return MeshType::Gmsh;
-        if (strutil::ends_with(s, ".stl")) return MeshType::Stl;
-        if (strutil::ends_with(s, ".bm" )) return MeshType::Binary;
-        if (strutil::ends_with(s, ".vtk")) return MeshType::Vtk;
+        auto s = to_lower(filename);
+        if (ends_with(s, ".msh")) return MeshType::Gmsh;
+        if (ends_with(s, ".stl")) return MeshType::Stl;
+        if (ends_with(s, ".bm" )) return MeshType::Binary;
+        if (ends_with(s, ".vtk")) return MeshType::Vtk;
         return MeshType::Unknown;
     }
 

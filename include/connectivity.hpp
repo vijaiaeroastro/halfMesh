@@ -5,7 +5,7 @@
 #include <functional>
 #include <unordered_map>
 
-namespace HalfMesh {
+namespace halfMesh {
     //
     //  Key types for faces, undirected edges, and directed half-edges
     //

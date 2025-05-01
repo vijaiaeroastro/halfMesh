@@ -1,8 +1,8 @@
-#include "mesh.hpp"
+#include "triMesh.hpp"
 #include <cmath>
 
-namespace HalfMesh {
-    double Mesh::get_area(unsigned fh) const {
+namespace halfMesh {
+    double triMesh::get_area(unsigned fh) const {
         auto f = get_face(fh);
         auto [v1,v2,v3] = f->get_vertices();
         double x1 = v1->get_x(), y1 = v1->get_y(), z1 = v1->get_z();
@@ -17,7 +17,7 @@ namespace HalfMesh {
         return 0.5 * std::sqrt(cx * cx + cy * cy + cz * cz);
     }
 
-    Vertex Mesh::get_face_normal(unsigned fh) const {
+    vertex triMesh::get_face_normal(unsigned fh) const {
         auto f = get_face(fh);
         auto [v1,v2,v3] = f->get_vertices();
         double ux = v2->get_x() - v1->get_x();
@@ -29,10 +29,10 @@ namespace HalfMesh {
         double nx = uy * vz - uz * vy;
         double ny = uz * vx - ux * vz;
         double nz = ux * vy - uy * vx;
-        return Vertex(nx, ny, nz);
+        return vertex(nx, ny, nz);
     }
 
-    double Mesh::get_face_angle(unsigned f1, unsigned f2) const {
+    double triMesh::get_face_angle(unsigned f1, unsigned f2) const {
         auto n1 = get_face_normal(f1);
         auto n2 = get_face_normal(f2);
         double dot = n1.get_x() * n2.get_x()

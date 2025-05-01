@@ -1,16 +1,16 @@
-#include "mesh.hpp"
+#include "triMesh.hpp"
 #include <iostream>
 
-using namespace HalfMesh;
+using namespace halfMesh;
 
 // Hand-built test mesh
-Mesh create_mesh() {
-    Mesh mesh;
-    auto v1 = mesh.add_vertex(0.0, 0.0, 0.0);
-    auto v2 = mesh.add_vertex(1.0, 0.0, 0.0);
-    auto v3 = mesh.add_vertex(0.0, 0.5, 0.0);
-    auto v4 = mesh.add_vertex(1.5, 0.5, 0.0);
-    auto v5 = mesh.add_vertex(2.5, 0.0, 0.0);
+triMesh create_mesh() {
+    triMesh mesh;
+    const auto v1 = mesh.add_vertex(0.0, 0.0, 0.0);
+    const auto v2 = mesh.add_vertex(1.0, 0.0, 0.0);
+    const auto v3 = mesh.add_vertex(0.0, 0.5, 0.0);
+    const auto v4 = mesh.add_vertex(1.5, 0.5, 0.0);
+    const auto v5 = mesh.add_vertex(2.5, 0.0, 0.0);
 
     mesh.add_face(v1, v2, v3);
     mesh.add_face(v2, v4, v3);
@@ -21,7 +21,7 @@ Mesh create_mesh() {
 }
 
 // Loop each face’s half-edge cycle
-void loop_through_half_edges_inside_a_face(const Mesh& mesh) {
+void loop_through_half_edges_inside_a_face(const triMesh& mesh) {
     for (auto& f : mesh.get_faces()) {
         auto start = f->get_one_half_edge();
         if (!start) continue;
@@ -38,7 +38,7 @@ void loop_through_half_edges_inside_a_face(const Mesh& mesh) {
 }
 
 // Loop each vertex’s incoming/outgoing half-edges
-void loop_through_vertices_in_a_mesh(const Mesh& mesh) {
+void loop_through_vertices_in_a_mesh(const triMesh& mesh) {
     for (auto& v : mesh.get_vertices()) {
         auto inc = v->incoming_half_edges();
         auto out = v->outgoing_half_edges();
@@ -49,7 +49,7 @@ void loop_through_vertices_in_a_mesh(const Mesh& mesh) {
 }
 
 // Count boundary edges
-void detect_boundary_edges(const Mesh& mesh) {
+void detect_boundary_edges(const triMesh& mesh) {
     size_t count = 0;
     for (auto& e : mesh.get_edges())
         if (e->is_boundary()) ++count;
@@ -57,7 +57,7 @@ void detect_boundary_edges(const Mesh& mesh) {
 }
 
 // Count boundary half-edges
-void detect_boundary_half_edges(const Mesh& mesh) {
+void detect_boundary_half_edges(const triMesh& mesh) {
     size_t count = 0;
     for (auto& he : mesh.get_half_edges())
         if (he->is_boundary()) ++count;
@@ -66,7 +66,7 @@ void detect_boundary_half_edges(const Mesh& mesh) {
 
 int main() {
     // Build our simple mesh
-    Mesh mesh = create_mesh();
+    const triMesh mesh = create_mesh();
     std::cout << "Mesh vertices : " << mesh.get_vertices().size() << "\n";
     std::cout << "Mesh faces    : " << mesh.get_faces().size() << "\n";
 
@@ -75,11 +75,11 @@ int main() {
               << (mesh.is_multiply_connected() ? "Yes" : "No")
               << "\n\n";
 
-    // loop_through_half_edges_inside_a_face(mesh);
-    // std::cout << "\n";
+    loop_through_half_edges_inside_a_face(mesh);
+    std::cout << "\n";
 
-    // loop_through_vertices_in_a_mesh(mesh);
-    // std::cout << "\n";
+    loop_through_vertices_in_a_mesh(mesh);
+    std::cout << "\n";
 
     detect_boundary_edges(mesh);
     detect_boundary_half_edges(mesh);

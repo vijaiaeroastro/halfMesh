@@ -1,11 +1,11 @@
-#include "mesh.hpp"
+#include "triMesh.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iterator>
 
-namespace HalfMesh {
-    void Mesh::save(const std::string &fn) const {
+namespace halfMesh {
+    void triMesh::save(const std::string &fn) const {
         switch (guess_mesh_format(fn)) {
             case MeshType::Gmsh:
                 write_gmsh(fn);
@@ -25,7 +25,7 @@ namespace HalfMesh {
         }
     }
 
-    void Mesh::read(const std::string &filename) {
+    void triMesh::read(const std::string &filename) {
         switch (guess_mesh_format(filename)) {
             case MeshType::Gmsh:
                 read_gmsh(filename);
@@ -42,7 +42,7 @@ namespace HalfMesh {
     }
 
     // — Gmsh —
-    void Mesh::read_gmsh(const std::string &fn) {
+    void triMesh::read_gmsh(const std::string &fn) {
         clear_data();
         std::ifstream in(fn);
         std::string line;
@@ -88,7 +88,7 @@ namespace HalfMesh {
         complete_mesh();
     }
 
-    void Mesh::read_binary(const std::string &fn) {
+    void triMesh::read_binary(const std::string &fn) {
         clear_data();
         std::ifstream in(fn, std::ios::binary);
         std::vector<uint8_t> buf((std::istreambuf_iterator<char>(in)),
@@ -108,7 +108,7 @@ namespace HalfMesh {
     }
 
     // — Writers —
-    void Mesh::write_gmsh(const std::string &fn) const {
+    void triMesh::write_gmsh(const std::string &fn) const {
         std::ofstream out(fn);
         out << "$MeshFormat\n2.2 0 " << sizeof(double) << "\n$EndMeshFormat\n";
         out << "$Nodes\n" << vertices_.size() << "\n";
@@ -124,7 +124,7 @@ namespace HalfMesh {
         out << "$EndElements\n";
     }
 
-    void Mesh::write_obj(const std::string &fn) const {
+    void triMesh::write_obj(const std::string &fn) const {
         std::ofstream out(fn);
         for (auto &v: vertices_)
             out << "v " << v->get_x() << " " << v->get_y() << " " << v->get_z() << "\n";
@@ -134,7 +134,7 @@ namespace HalfMesh {
         }
     }
 
-    void Mesh::write_binary(const std::string &fn) const {
+    void triMesh::write_binary(const std::string &fn) const {
         nlohmann::json js;
         for (auto &v: vertices_)
             js["VERTICES"].push_back({v->get_x(), v->get_y(), v->get_z()});
@@ -154,7 +154,7 @@ namespace HalfMesh {
         );
     }
 
-    void Mesh::write_vtk(const std::string &fn) const {
+    void triMesh::write_vtk(const std::string &fn) const {
         std::ofstream out(fn);
         out << "# vtk DataFile Version 2.0\nHalfMesh VTK\nASCII\nDATASET POLYDATA\n";
         out << "POINTS " << vertices_.size() << " float\n";
@@ -170,7 +170,7 @@ namespace HalfMesh {
     //
     // Write ASCII STL
     //
-    void Mesh::write_stl_ascii(const std::string &fn) const {
+    void triMesh::write_stl_ascii(const std::string &fn) const {
         std::ofstream out(fn);
         if (!out) {
             std::cerr << "Can't open " << fn << "\n";
@@ -180,7 +180,7 @@ namespace HalfMesh {
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
             // normal
-            Vertex n = get_face_normal(f->handle());
+            vertex n = get_face_normal(f->handle());
             double nx = n.get_x(), ny = n.get_y(), nz = n.get_z();
             double len = std::sqrt(nx * nx + ny * ny + nz * nz);
             if (len > 0) {
@@ -202,7 +202,7 @@ namespace HalfMesh {
     //
     // Write binary STL
     //
-    void Mesh::write_stl_binary(const std::string &fn) const {
+    void triMesh::write_stl_binary(const std::string &fn) const {
         std::ofstream out(fn, std::ios::binary);
         if (!out) {
             std::cerr << "Can't open " << fn << "\n";
@@ -219,7 +219,7 @@ namespace HalfMesh {
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
             // normal
-            Vertex n = get_face_normal(f->handle());
+            vertex n = get_face_normal(f->handle());
             double nx = n.get_x(), ny = n.get_y(), nz = n.get_z();
             if (double len = std::sqrt(nx * nx + ny * ny + nz * nz); len > 0) {
                 nx /= len;
@@ -248,7 +248,7 @@ namespace HalfMesh {
     //
     // Read STL (auto–detect ASCII vs binary)
     //
-    void Mesh::read_stl(const std::string &fn) {
+    void triMesh::read_stl(const std::string &fn) {
         // peek first 512 bytes
         std::ifstream in(fn, std::ios::binary);
         if (!in) {
@@ -272,7 +272,7 @@ namespace HalfMesh {
     //
     // Read ASCII STL
     //
-    void Mesh::read_stl_ascii(const std::string &fn) {
+    void triMesh::read_stl_ascii(const std::string &fn) {
         clear_data();
         std::ifstream in(fn);
         if (!in) {
@@ -315,7 +315,7 @@ namespace HalfMesh {
     //
     // Read binary STL
     //
-    void Mesh::read_stl_binary(const std::string &fn) {
+    void triMesh::read_stl_binary(const std::string &fn) {
         clear_data();
         std::ifstream in(fn, std::ios::binary);
         if (!in) {

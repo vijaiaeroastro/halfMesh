@@ -4,12 +4,12 @@
 #include <memory>
 #include <limits>
 
-namespace HalfMesh {
+namespace halfMesh {
 
-    class HalfEdge {
+    class halfedge {
     public:
-        HalfEdge(std::shared_ptr<Vertex> a,
-                 std::shared_ptr<Vertex> b)
+        halfedge(std::shared_ptr<vertex> a,
+                 std::shared_ptr<vertex> b)
           : v1_(a),
             v2_(b),
             handle_(std::numeric_limits<unsigned int>::max()),
@@ -19,11 +19,11 @@ namespace HalfMesh {
             boundary_(false)
         {}
 
-        ~HalfEdge() = default;
+        ~halfedge() = default;
 
         //— Accessors ——
-        std::shared_ptr<Vertex> get_vertex_one()   const { return v1_.lock(); }
-        std::shared_ptr<Vertex> get_vertex_two()   const { return v2_.lock(); }
+        std::shared_ptr<vertex> get_vertex_one()   const { return v1_.lock(); }
+        std::shared_ptr<vertex> get_vertex_two()   const { return v2_.lock(); }
         unsigned int            handle()          const { return handle_; }
         unsigned int            get_parent_edge() const { return parent_edge_handle_; }
         unsigned int            get_parent_face() const { return parent_face_handle_; }
@@ -38,7 +38,7 @@ namespace HalfMesh {
         void set_boundary(bool b)                         { boundary_ = b; }
 
     private:
-        std::weak_ptr<Vertex>   v1_, v2_;
+        std::weak_ptr<vertex>   v1_, v2_;
         unsigned int            handle_;
         unsigned int            parent_edge_handle_;
         unsigned int            parent_face_handle_;

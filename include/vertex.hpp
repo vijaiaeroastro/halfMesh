@@ -5,16 +5,16 @@
 #include <memory>
 #include <vector>
 
-namespace HalfMesh {
+namespace halfMesh {
 
-    class Vertex {
+    class vertex {
     public:
-        Vertex(double x, double y, double z)
+        vertex(double x, double y, double z)
           : x_(x), y_(y), z_(z),
             handle_(std::numeric_limits<unsigned int>::max())
         {}
 
-        ~Vertex() = default;
+        ~vertex() = default;
 
         //— Accessors ——
         unsigned int handle() const           { return handle_; }
@@ -22,8 +22,8 @@ namespace HalfMesh {
         double       get_y()  const           { return y_; }
         double       get_z()  const           { return z_; }
 
-        std::vector<std::shared_ptr<HalfEdge>> incoming_half_edges() const {
-            std::vector<std::shared_ptr<HalfEdge>> out;
+        std::vector<std::shared_ptr<halfedge>> incoming_half_edges() const {
+            std::vector<std::shared_ptr<halfedge>> out;
             out.reserve(incoming_.size());
             for (auto& wp : incoming_) {
                 if (auto sp = wp.lock()) out.push_back(sp);
@@ -31,8 +31,8 @@ namespace HalfMesh {
             return out;
         }
 
-        std::vector<std::shared_ptr<HalfEdge>> outgoing_half_edges() const {
-            std::vector<std::shared_ptr<HalfEdge>> out;
+        std::vector<std::shared_ptr<halfedge>> outgoing_half_edges() const {
+            std::vector<std::shared_ptr<halfedge>> out;
             out.reserve(outgoing_.size());
             for (auto& wp : outgoing_) {
                 if (auto sp = wp.lock()) out.push_back(sp);
@@ -46,19 +46,19 @@ namespace HalfMesh {
         void set_y(double y)                              { y_ = y; }
         void set_z(double z)                              { z_ = z; }
 
-        void add_incoming_half_edge(const std::shared_ptr<HalfEdge>& he) {
+        void add_incoming_half_edge(const std::shared_ptr<halfedge>& he) {
             incoming_.push_back(he);
         }
 
-        void add_outgoing_half_edge(const std::shared_ptr<HalfEdge>& he) {
+        void add_outgoing_half_edge(const std::shared_ptr<halfedge>& he) {
             outgoing_.push_back(he);
         }
 
     private:
         double  x_, y_, z_;
         unsigned int                         handle_;
-        std::vector<std::weak_ptr<HalfEdge>> incoming_;
-        std::vector<std::weak_ptr<HalfEdge>> outgoing_;
+        std::vector<std::weak_ptr<halfedge>> incoming_;
+        std::vector<std::weak_ptr<halfedge>> outgoing_;
     };
 
 } // namespace HalfMesh

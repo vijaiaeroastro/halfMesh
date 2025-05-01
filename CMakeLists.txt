@@ -11,10 +11,9 @@ set(HDRS
         include/face.hpp
         include/connectivity.hpp
         include/half_edge.hpp
-        include/mesh.hpp
+        include/triMesh.hpp
         include/vertex.hpp
-        include/json.hpp
-        include/strutil.hpp)
+        include/json.hpp)
 
 set(SRCS
         source/mesh_core.cpp

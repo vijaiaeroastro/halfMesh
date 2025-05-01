@@ -1,9 +1,9 @@
-#include "mesh.hpp"
+#include "triMesh.hpp"
 #include <unordered_set>
 #include <vector>
 
-namespace HalfMesh {
-    Mesh::HalfEdgePtr Mesh::get_next_half_edge(const HalfEdgePtr &he,
+namespace halfMesh {
+    triMesh::HalfEdgePtr triMesh::get_next_half_edge(const HalfEdgePtr &he,
                                                const FacePtr &f) const {
         auto v2 = he->get_vertex_two();
         for (auto &cand: v2->outgoing_half_edges()) {
@@ -13,7 +13,7 @@ namespace HalfMesh {
         return nullptr;
     }
 
-    Mesh::HalfEdgePtr Mesh::get_previous_half_edge(const HalfEdgePtr &he,
+    triMesh::HalfEdgePtr triMesh::get_previous_half_edge(const HalfEdgePtr &he,
                                                    const FacePtr &f) const {
         auto v1 = he->get_vertex_one();
         for (auto &cand: v1->incoming_half_edges()) {
@@ -23,7 +23,7 @@ namespace HalfMesh {
         return nullptr;
     }
 
-    Mesh::FacePtr Mesh::get_one_neighbour_face(const FacePtr &f) const {
+    triMesh::FacePtr triMesh::get_one_neighbour_face(const FacePtr &f) const {
         auto he = f->get_one_half_edge();
         if (!he) return nullptr;
         unsigned opp = he->get_opposing_half_edge();
@@ -31,7 +31,7 @@ namespace HalfMesh {
         return get_face(get_half_edge(opp)->get_parent_face());
     }
 
-    bool Mesh::is_multiply_connected() const {
+    bool triMesh::is_multiply_connected() const {
         if (faces_.empty()) return false;
 
         std::unordered_set<unsigned> visited;
@@ -65,7 +65,7 @@ namespace HalfMesh {
         return visited.size() != faces_.size();
     }
 
-    unsigned Mesh::compute_number_of_holes() const {
+    unsigned triMesh::compute_number_of_holes() const {
         // collect boundary half-edges
         std::vector<HalfEdgePtr> boundaries;
         for (auto &he: half_edges_)

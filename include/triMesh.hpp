@@ -14,17 +14,17 @@
 #include "edge.hpp"
 #include "face.hpp"
 
-namespace HalfMesh {
+namespace halfMesh {
 
-class Mesh {
+class triMesh {
 public:
-    using VertexPtr   = std::shared_ptr<Vertex>;
-    using HalfEdgePtr = std::shared_ptr<HalfEdge>;
-    using EdgePtr     = std::shared_ptr<Edge>;
-    using FacePtr     = std::shared_ptr<Face>;
+    using VertexPtr   = std::shared_ptr<vertex>;
+    using HalfEdgePtr = std::shared_ptr<halfedge>;
+    using EdgePtr     = std::shared_ptr<edge>;
+    using FacePtr     = std::shared_ptr<face>;
 
-    Mesh();
-    ~Mesh();
+    triMesh();
+    ~triMesh();
 
     // Core mutators
     VertexPtr   add_vertex(double x, double y, double z);
@@ -52,7 +52,7 @@ public:
 
     // Geometry queries
     double get_area(unsigned face_handle) const;
-    Vertex get_face_normal(unsigned face_handle) const;
+    vertex get_face_normal(unsigned face_handle) const;
     double get_face_angle(unsigned f1, unsigned f2) const;
 
     // Property API
