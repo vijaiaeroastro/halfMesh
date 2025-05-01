@@ -67,6 +67,8 @@ void detect_boundary_half_edges(const Mesh& mesh) {
 int main() {
     // Build our simple mesh
     Mesh mesh = create_mesh();
+    std::cout << "Mesh vertices : " << mesh.get_vertices().size() << "\n";
+    std::cout << "Mesh faces    : " << mesh.get_faces().size() << "\n";
 
     // Diagnostics
     std::cout << "Multiply Connected? "

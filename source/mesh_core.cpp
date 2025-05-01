@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "mesh.hpp"
 #include <utility>      // for std::swap
 
@@ -46,25 +48,26 @@ namespace HalfMesh {
         v->set_handle(h);
         vertices_.push_back(v);
         handle_to_vertex_[h] = v;
+        // std::cout << "Added vertex : " << h << " with coordinates : " << x << "," << y << "," << z << std::endl;
         return v;
     }
 
     Mesh::HalfEdgePtr Mesh::add_half_edge(const VertexPtr &v1,
                                           const VertexPtr &v2,
                                           const FacePtr &f) {
-        auto key = std::make_pair(v1->handle(), v2->handle());
-        if (auto it = half_edge_lookup_.find(key); it != half_edge_lookup_.end())
+        const HalfEdgeKey key{v1->handle(), v2->handle()};
+        if (const auto it = half_edge_lookup_.find(key); it != half_edge_lookup_.end())
             return it->second;
 
         auto he = std::make_shared<HalfEdge>(v1, v2);
-        unsigned h = next_half_edge_handle_++;
+        const unsigned h = next_half_edge_handle_++;
         he->set_handle(h);
         he->set_parent_face(f->handle());
 
         // link opposites
-        auto rev = std::make_pair(v2->handle(), v1->handle());
-        if (auto rit = half_edge_lookup_.find(rev); rit != half_edge_lookup_.end()) {
-            unsigned opp = rit->second->handle();
+        const auto rev = std::make_pair(v2->handle(), v1->handle());
+        if (const auto rit = half_edge_lookup_.find(rev); rit != half_edge_lookup_.end()) {
+            const auto opp = rit->second->handle();
             he->set_opposing_half_edge(opp);
             rit->second->set_opposing_half_edge(h);
         }
@@ -81,51 +84,55 @@ namespace HalfMesh {
     Mesh::EdgePtr Mesh::add_edge(const VertexPtr &v1,
                                  const VertexPtr &v2,
                                  const FacePtr &f) {
-        auto key = make_edge_key(v1->handle(), v2->handle());
-        if (auto it = edge_lookup_.find(key); it != edge_lookup_.end()) {
-            auto e = handle_to_edge_[it->second];
-            auto he = add_half_edge(v1, v2, f);
+        const auto key = make_edge_key(v1->handle(), v2->handle());
+        if (const auto it = edge_lookup_.find(key); it != edge_lookup_.end()) {
+            const auto e = handle_to_edge_[it->second];
+            const auto he = add_half_edge(v1, v2, f);
             he->set_parent_edge(e->handle());
             e->set_one_half_edge(he);
+            // std::cout << "----> Found an existing edge : "
+            // << e->handle() << " between " << e->get_vertex_one()->handle() << "," << e->get_vertex_two()->handle() << std::endl;
             return e;
         }
 
         auto e = std::make_shared<Edge>(v1, v2);
-        unsigned h = next_edge_handle_++;
+        const unsigned h = next_edge_handle_++;
         e->set_handle(h);
         edges_.push_back(e);
         handle_to_edge_[h] = e;
         edge_lookup_[key] = h;
 
-        auto he = add_half_edge(v1, v2, f);
+        const auto he = add_half_edge(v1, v2, f);
         he->set_parent_edge(h);
         e->set_one_half_edge(he);
+
+        // std::cout << "----> Created a new edge : "
+        // << e->handle() << " between " << e->get_vertex_one()->handle() << "," << e->get_vertex_two()->handle() << std::endl;
         return e;
     }
 
     Mesh::FacePtr Mesh::add_face(const VertexPtr &v1,
                                  const VertexPtr &v2,
                                  const VertexPtr &v3) {
-        auto key = make_face_key(v1->handle(), v2->handle(), v3->handle());
-        if (auto it = face_lookup_.find(key); it != face_lookup_.end())
+        const auto key = make_face_key(v1->handle(), v2->handle(), v3->handle());
+        if (const auto it = face_lookup_.find(key); it != face_lookup_.end())
             return handle_to_face_[it->second];
 
         // 1) create the Face
         auto f = std::make_shared<Face>(v1, v2, v3);
-        unsigned fh = next_face_handle_++;
+        const unsigned fh = next_face_handle_++;
         f->set_handle(fh);
         faces_.push_back(f);
         handle_to_face_[fh] = f;
         face_lookup_[key] = fh;
 
-        // 2) carve out its three half-edges, but capture the first one
-        auto he0 = add_half_edge(v1, v2, f);
-        f->set_one_half_edge(he0);
+        // 2) add the other two edges
+        const auto fE1 = add_edge(v1, v2, f);
+        const auto fE2 = add_edge(v2, v3, f);
+        const auto fE3 = add_edge(v3, v1, f);
 
-        // 3) add the other two edges (re-using the first half-edge for v1→v2)
-        add_edge(v1, v2, f); // reuses he0
-        add_edge(v2, v3, f);
-        add_edge(v3, v1, f);
+        // 3) store one of the half edges on the face
+        f->set_one_half_edge(fE1->get_one_half_edge());
 
         return f;
     }
@@ -134,14 +141,21 @@ namespace HalfMesh {
         if (faces_.empty()) return;
 
         // mark half-edge boundaries
-        for (auto &he: half_edges_)
+        for (auto& he : half_edges_) {
+            // std::cout << "HE : " << he->handle() << "->" << he->get_opposing_half_edge() << std::endl;
             he->set_boundary(
-                he->get_opposing_half_edge() == std::numeric_limits<unsigned>::max());
+                he->get_opposing_half_edge() == std::numeric_limits<unsigned>::max()
+            );
+        }
 
         // mark edge boundaries
-        for (auto &e: edges_)
-            e->set_boundary(e->get_one_half_edge()->is_boundary());
+        for (auto& e : edges_) {
+            e->set_boundary(
+                e->get_one_half_edge()->is_boundary()
+            );
+        }
     }
+
 
     // trivial handle‐->object
     Mesh::VertexPtr Mesh::get_vertex(unsigned h) const { return handle_to_vertex_.at(h); }

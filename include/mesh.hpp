@@ -180,8 +180,10 @@ private:
     // Connectivity lookups
     EdgeHandleMap    edge_lookup_;
     FaceHandleMap    face_lookup_;
-    std::unordered_map<EdgeKey, HalfEdgePtr, EdgeKeyHash, EdgeKeyEqual>
-                     half_edge_lookup_;
+    std::unordered_map<HalfEdgeKey,
+                     HalfEdgePtr,
+                     HalfEdgeKeyHash,
+                     HalfEdgeKeyEqual> half_edge_lookup_;
 
     // Per‐entity property stores
     nlohmann::json vertex_data_store;
