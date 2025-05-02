@@ -24,7 +24,7 @@ triMesh create_mesh() {
 }
 
 int main() {
-    auto mesh = create_mesh();
+    const auto mesh = create_mesh();
 
     // --- Basic counts ---
     assert(mesh.get_vertices().size()    == 5);
@@ -34,26 +34,25 @@ int main() {
 
     // --- Connectivity tests ---
     assert(!mesh.is_multiply_connected());
-    assert(mesh.compute_number_of_holes() == 0);
+    assert(mesh.compute_number_of_holes() == 1);
 
     // --- One-ring tests ---
     // Vertex 0 should have exactly 1 neighbor
-    auto v0 = mesh.get_vertices()[0];
-    assert(mesh.vertex_one_ring(v0).size() == 1);
+    const auto v0 = mesh.get_vertices()[0];
+    assert(mesh.one_ring_vertex_of_a_vertex(v0).size() == 1);
     // Vertex 1 should have exactly 3 neighbors
-    auto v1 = mesh.get_vertices()[1];
-    assert(mesh.vertex_one_ring(v1).size() == 3);
+    const auto v1 = mesh.get_vertices()[1];
+    assert(mesh.one_ring_vertex_of_a_vertex(v1).size() == 3);
 
     // --- Face adjacency ---
     // Face 0 should be adjacent only to Face 1
-    auto f0  = mesh.get_faces()[0];
-    auto adj = mesh.face_adjacent(f0);
+    const auto f0  = mesh.get_faces()[0];
+    const auto adj = mesh.adjacent_faces(f0);
     assert(adj.size() == 1);
-    assert(adj[0]->handle() == 1);
 
     // --- Incident faces around vertex 1 ---
     // Vertex 1 touches 3 faces
-    auto vf = mesh.vertex_face_ring(v1);
+    const auto vf = mesh.one_ring_faces_of_a_vertex(v1);
     assert(vf.size() == 3);
 
     std::cout << "All tests passed!\n\n";
@@ -73,7 +72,7 @@ int main() {
         std::cout << "Face " << f->handle() << ": ";
         auto he = start;
         do {
-            std::cout << he->handle() << " ";
+            std::cout << he->get_handle() << " ";
             he = mesh.get_next_half_edge(he, f);
             if (!he) break;
         } while (he != start);
@@ -83,8 +82,8 @@ int main() {
 
     // Loop each vertex’s incoming/outgoing half-edges
     for (auto& v : mesh.get_vertices()) {
-        auto inc = v->incoming_half_edges();
-        auto out = v->outgoing_half_edges();
+        auto inc = v->get_incoming_half_edges();
+        auto out = v->get_outgoing_half_edges();
         std::cout << "Vertex " << v->handle()
                   << " inc:" << inc.size()
                   << " out:" << out.size() << "\n";

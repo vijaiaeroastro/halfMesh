@@ -16,7 +16,7 @@ namespace halfMesh {
     //
     //  Hash-combine helper (32-bit golden ratio)
     //
-    inline void hash_combine(std::size_t &seed, std::size_t v) {
+    inline void hash_combine(std::size_t &seed, const std::size_t v) {
         seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
 
@@ -98,6 +98,5 @@ namespace halfMesh {
     //  Handle maps for fast lookup / de-duplication
     //
     using FaceHandleMap = std::unordered_map<FaceKey, unsigned, FaceKeyHash, FaceKeyEqual>;
-    using EdgeHandleMap = std::unordered_map<EdgeKey,unsigned,EdgeKeyHash,EdgeKeyEqual>;
-
+    using EdgeHandleMap = std::unordered_map<EdgeKey, unsigned, EdgeKeyHash, EdgeKeyEqual>;
 }

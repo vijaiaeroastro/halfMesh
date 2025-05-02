@@ -21,13 +21,11 @@ namespace halfMesh {
             for (int i = 0; i < 3 && he; ++i) {
                 if (i > 0) he = get_next_half_edge(he, f);
 
-                unsigned opph = he->get_opposing_half_edge();
-                if (opph == std::numeric_limits<unsigned>::max())
+                auto opposingHalfEdge = he->get_opposing_half_edge();
+                if (! opposingHalfEdge)
                     continue; // boundary, no neighbor
 
-                auto he_opp = get_half_edge(opph);
-                auto nf = get_face(he_opp->get_parent_face());
-                if (nf && visited.insert(nf->handle()).second) {
+                if (auto nf = opposingHalfEdge->get_parent_face(); nf && visited.insert(nf->handle()).second) {
                     stack.push_back(nf);
                 }
             }
@@ -46,23 +44,23 @@ namespace halfMesh {
 
         std::unordered_set<unsigned> used;
         unsigned loops = 0;
-        for (auto &start: boundaries) {
-            unsigned h0 = start->handle();
+        for (const auto &start: boundaries) {
+            unsigned h0 = start->get_handle();
             if (used.count(h0)) continue;
             auto cur = start;
             do {
-                used.insert(cur->handle());
+                used.insert(cur->get_handle());
                 // next boundary around vertex_two
                 auto v = cur->get_vertex_two();
                 halfEdgePtr next = nullptr;
-                for (auto &cand: v->outgoing_half_edges()) {
+                for (auto &cand: v->get_outgoing_half_edges()) {
                     if (cand != cur && cand->is_boundary()) {
                         next = cand;
                         break;
                     }
                 }
                 cur = next;
-            } while (cur && cur->handle() != h0);
+            } while (cur && cur->get_handle() != h0);
             ++loops;
         }
         return loops;

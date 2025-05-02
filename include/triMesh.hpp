@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include <json.hpp>
 
@@ -15,198 +16,221 @@
 #include "face.hpp"
 
 namespace halfMesh {
+    class triMesh {
+    public:
+        triMesh();
 
-class triMesh {
-public:
-    using vertexPtr   = std::shared_ptr<vertex>;
-    using halfEdgePtr = std::shared_ptr<halfedge>;
-    using edgePtr     = std::shared_ptr<edge>;
-    using facePtr     = std::shared_ptr<face>;
+        ~triMesh();
 
-    triMesh();
-    ~triMesh();
+        // Core mutators
+        vertexPtr add_vertex(double x, double y, double z);
 
-    // Core mutators
-    vertexPtr   add_vertex(double x, double y, double z);
-    halfEdgePtr add_half_edge(const vertexPtr& v1,
-                              const vertexPtr& v2,
-                              const facePtr&   f);
-    edgePtr     add_edge(const vertexPtr& v1,
-                         const vertexPtr& v2,
-                         const facePtr&   f);
-    facePtr     add_face(const vertexPtr& v1,
-                         const vertexPtr& v2,
-                         const vertexPtr& v3);
-    void        complete_mesh();
+        halfEdgePtr add_half_edge(const vertexPtr &v1,
+                                  const vertexPtr &v2,
+                                  const facePtr &f);
 
-    // I/O
-    void save(const std::string& filename) const;
-    void read(const std::string& filename);
+        edgePtr add_edge(const vertexPtr &v1,
+                         const vertexPtr &v2,
+                         const facePtr &f);
 
-    // Traversals & topology
-    halfEdgePtr get_next_half_edge(const halfEdgePtr& he, const facePtr& f) const;
-    halfEdgePtr get_previous_half_edge(const halfEdgePtr& he, const facePtr& f) const;
-    facePtr     get_one_neighbour_face(const facePtr& f) const;
-    std::vector<facePtr> face_adjacent(const facePtr& f) const;
-    std::vector<facePtr> vertex_face_ring(const vertexPtr& v) const;
-    std::vector<vertexPtr> vertex_one_ring(const vertexPtr& v) const;
+        facePtr add_face(const vertexPtr &v1,
+                         const vertexPtr &v2,
+                         const vertexPtr &v3);
 
-    // Some algorithms
-    bool        is_multiply_connected() const;
-    unsigned    compute_number_of_holes() const;
+        void complete_mesh();
 
-    // Geometry queries
-    double get_area(unsigned face_handle) const;
-    vertex get_face_normal(unsigned face_handle) const;
-    double get_face_angle(unsigned f1, unsigned f2) const;
+        // I/O
+        void save(const std::string &filename) const;
 
-    // Property API
-    template<typename T>
-    PropertyStatus add_vertex_property(const std::string& name, T init) {
-        if (vertex_data_store.contains(name))
-            return PropertyStatus::Exists;
-        for (auto& v : vertices_)
-            vertex_data_store[name][v->handle()] = init;
-        return PropertyStatus::Added;
-    }
+        void read(const std::string &filename);
 
-    template<typename T>
-    PropertyStatus add_edge_property(const std::string& name, T init) {
-        if (edge_data_store.contains(name))
-            return PropertyStatus::Exists;
-        for (auto& e : edges_)
-            edge_data_store[name][e->handle()] = init;
-        return PropertyStatus::Added;
-    }
+        // Traversals & topology
+        halfEdgePtr get_next_half_edge(const halfEdgePtr &he, const facePtr &f) const;
 
-    template<typename T>
-    PropertyStatus add_face_property(const std::string& name, T init) {
-        if (face_data_store.contains(name))
-            return PropertyStatus::Exists;
-        for (auto& f : faces_)
-            face_data_store[name][f->handle()] = init;
-        return PropertyStatus::Added;
-    }
+        halfEdgePtr get_previous_half_edge(const halfEdgePtr &he, const facePtr &f) const;
 
-    // Inline remove‐property implementation
-    PropertyStatus delete_property(const std::string& name, EntityType type) {
-        auto& store = (type == EntityType::Vertex
-                     ? vertex_data_store
-                     : type == EntityType::Edge
-                       ? edge_data_store
-                       : face_data_store);
-        if (!store.contains(name))
-            return PropertyStatus::DoesNotExist;
-        store.erase(name);
-        return PropertyStatus::Deleted;
-    }
+        facePtr get_one_neighbour_face(const facePtr &f) const;
 
-    template<typename T>
-    void set_vertex_property(const std::string& name, unsigned h, T val) {
-        vertex_data_store[name][h] = val;
-    }
-    template<typename T>
-    void set_edge_property  (const std::string& name, unsigned h, T val) {
-        edge_data_store[name][h] = val;
-    }
-    template<typename T>
-    void set_face_property  (const std::string& name, unsigned h, T val) {
-        face_data_store[name][h] = val;
-    }
+        std::unordered_set<facePtr> adjacent_faces(const facePtr &f) const;
 
-    template<typename T>
-    T get_vertex_property(const std::string& name, unsigned h) const {
-        return vertex_data_store.at(name).at(h).get<T>();
-    }
-    template<typename T>
-    T get_edge_property  (const std::string& name, unsigned h) const {
-        return edge_data_store.at(name).at(h).get<T>();
-    }
-    template<typename T>
-    T get_face_property  (const std::string& name, unsigned h) const {
-        return face_data_store.at(name).at(h).get<T>();
-    }
+        std::unordered_set<facePtr> one_ring_faces_of_a_vertex(const vertexPtr &v) const;
 
-    // Helpers
-    vertexPtr   get_vertex(unsigned h)    const;
-    halfEdgePtr get_half_edge(unsigned h) const;
-    edgePtr     get_edge(unsigned h)      const;
-    facePtr     get_face(unsigned h)      const;
+        std::unordered_set<vertexPtr> one_ring_vertex_of_a_vertex(const vertexPtr &v) const;
+
+        // Some algorithms
+        bool is_multiply_connected() const;
+
+        unsigned compute_number_of_holes() const;
+
+        // Geometry queries
+        double get_area(unsigned face_handle) const;
+
+        vertex get_face_normal(unsigned face_handle) const;
+
+        double get_face_angle(unsigned f1, unsigned f2) const;
+
+        // Property API
+        template<typename T>
+        PropertyStatus add_vertex_property(const std::string &name, T init) {
+            if (vertex_data_store.contains(name))
+                return PropertyStatus::Exists;
+            for (auto &v: vertices_)
+                vertex_data_store[name][v->handle()] = init;
+            return PropertyStatus::Added;
+        }
+
+        template<typename T>
+        PropertyStatus add_edge_property(const std::string &name, T init) {
+            if (edge_data_store.contains(name))
+                return PropertyStatus::Exists;
+            for (auto &e: edges_)
+                edge_data_store[name][e->get_handle()] = init;
+            return PropertyStatus::Added;
+        }
+
+        template<typename T>
+        PropertyStatus add_face_property(const std::string &name, T init) {
+            if (face_data_store.contains(name))
+                return PropertyStatus::Exists;
+            for (auto &f: faces_)
+                face_data_store[name][f->handle()] = init;
+            return PropertyStatus::Added;
+        }
+
+        // Inline remove‐property implementation
+        PropertyStatus delete_property(const std::string &name, EntityType type) {
+            auto &store = (type == EntityType::Vertex
+                               ? vertex_data_store
+                               : type == EntityType::Edge
+                                     ? edge_data_store
+                                     : face_data_store);
+            if (!store.contains(name))
+                return PropertyStatus::DoesNotExist;
+            store.erase(name);
+            return PropertyStatus::Deleted;
+        }
+
+        template<typename T>
+        void set_vertex_property(const std::string &name, unsigned h, T val) {
+            vertex_data_store[name][h] = val;
+        }
+
+        template<typename T>
+        void set_edge_property(const std::string &name, unsigned h, T val) {
+            edge_data_store[name][h] = val;
+        }
+
+        template<typename T>
+        void set_face_property(const std::string &name, unsigned h, T val) {
+            face_data_store[name][h] = val;
+        }
+
+        template<typename T>
+        T get_vertex_property(const std::string &name, unsigned h) const {
+            return vertex_data_store.at(name).at(h).get<T>();
+        }
+
+        template<typename T>
+        T get_edge_property(const std::string &name, unsigned h) const {
+            return edge_data_store.at(name).at(h).get<T>();
+        }
+
+        template<typename T>
+        T get_face_property(const std::string &name, unsigned h) const {
+            return face_data_store.at(name).at(h).get<T>();
+        }
+
+        // Helpers
+        vertexPtr get_vertex(unsigned h) const;
+
+        halfEdgePtr get_half_edge(unsigned h) const;
+
+        edgePtr get_edge(unsigned h) const;
+
+        facePtr get_face(unsigned h) const;
 
 
-    // --- Bulk accessors definitions ---
+        // --- Bulk accessors definitions ---
 
-    const std::vector<vertexPtr>&
-    get_vertices() const {
-        return vertices_;
-    }
+        const std::vector<vertexPtr> &
+        get_vertices() const {
+            return vertices_;
+        }
 
-    const std::vector<halfEdgePtr>&
-    get_half_edges() const {
-        return half_edges_;
-    }
+        const std::vector<halfEdgePtr> &
+        get_half_edges() const {
+            return half_edges_;
+        }
 
-    const std::vector<edgePtr>&
-    get_edges() const {
-        return edges_;
-    }
+        const std::vector<edgePtr> &
+        get_edges() const {
+            return edges_;
+        }
 
-    const std::vector<facePtr>&
-    get_faces() const {
-        return faces_;
-    }
+        const std::vector<facePtr> &
+        get_faces() const {
+            return faces_;
+        }
 
-private:
-    // I/O routines
-    void read_gmsh   (const std::string& fn);
-    void read_obj    (const std::string& fn);
-    void read_binary (const std::string& fn);
+    private:
+        // I/O routines
+        void read_gmsh(const std::string &fn);
 
-    void write_gmsh   (const std::string& fn) const;
-    void write_obj    (const std::string& fn) const;
-    void write_binary (const std::string& fn) const;
-    void write_vtk    (const std::string& fn) const;
+        void read_obj(const std::string &fn);
 
-    // STL I/O
-    void write_stl_ascii(const std::string& filename) const;
-    void write_stl_binary(const std::string& filename) const;
-    void read_stl(const std::string& filename);
-    void read_stl_ascii(const std::string& filename);
-    void read_stl_binary(const std::string& filename);
+        void read_binary(const std::string &fn);
 
-    // Cleanup
-    void clear_data();
+        void write_gmsh(const std::string &fn) const;
 
-    // Ownership
-    std::vector<vertexPtr>   vertices_;
-    std::vector<halfEdgePtr> half_edges_;
-    std::vector<edgePtr>     edges_;
-    std::vector<facePtr>     faces_;
+        void write_obj(const std::string &fn) const;
 
-    // Handle → object maps
-    std::unordered_map<unsigned, vertexPtr>   handle_to_vertex_;
-    std::unordered_map<unsigned, halfEdgePtr> handle_to_half_edge_;
-    std::unordered_map<unsigned, edgePtr>     handle_to_edge_;
-    std::unordered_map<unsigned, facePtr>     handle_to_face_;
+        void write_binary(const std::string &fn) const;
 
-    // Connectivity lookups
-    EdgeHandleMap    edge_lookup_;
-    FaceHandleMap    face_lookup_;
-    std::unordered_map<HalfEdgeKey,
-                     halfEdgePtr,
-                     HalfEdgeKeyHash,
-                     HalfEdgeKeyEqual> half_edge_lookup_;
+        void write_vtk(const std::string &fn) const;
 
-    // Per‐entity property stores
-    nlohmann::json vertex_data_store;
-    nlohmann::json edge_data_store;
-    nlohmann::json face_data_store;
+        // STL I/O
+        void write_stl_ascii(const std::string &filename) const;
 
-    // Next‐free handles
-    unsigned next_vertex_handle_    = 0;
-    unsigned next_half_edge_handle_ = 0;
-    unsigned next_edge_handle_      = 0;
-    unsigned next_face_handle_      = 0;
-};
+        void write_stl_binary(const std::string &filename) const;
 
+        void read_stl(const std::string &filename);
+
+        void read_stl_ascii(const std::string &filename);
+
+        void read_stl_binary(const std::string &filename);
+
+        // Cleanup
+        void clear_data();
+
+        // Ownership
+        std::vector<vertexPtr> vertices_;
+        std::vector<halfEdgePtr> half_edges_;
+        std::vector<edgePtr> edges_;
+        std::vector<facePtr> faces_;
+
+        // Handle → object maps
+        std::unordered_map<unsigned, vertexPtr> handle_to_vertex_;
+        std::unordered_map<unsigned, halfEdgePtr> handle_to_half_edge_;
+        std::unordered_map<unsigned, edgePtr> handle_to_edge_;
+        std::unordered_map<unsigned, facePtr> handle_to_face_;
+
+        // Connectivity lookups
+        EdgeHandleMap edge_lookup_;
+        FaceHandleMap face_lookup_;
+        std::unordered_map<HalfEdgeKey,
+            halfEdgePtr,
+            HalfEdgeKeyHash,
+            HalfEdgeKeyEqual> half_edge_lookup_;
+
+        // Per‐entity property stores
+        nlohmann::json vertex_data_store;
+        nlohmann::json edge_data_store;
+        nlohmann::json face_data_store;
+
+        // Next‐free handles
+        unsigned next_vertex_handle_ = 0;
+        unsigned next_half_edge_handle_ = 0;
+        unsigned next_edge_handle_ = 0;
+        unsigned next_face_handle_ = 0;
+    };
 } // namespace HalfMesh
