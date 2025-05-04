@@ -50,13 +50,13 @@ namespace halfMesh {
     }
 
     int triMesh::euler_characteristic() const {
-        return vertices_.size()  - edges_.size() + faces_.size();
+        return static_cast<int>(vertices_.size()  - edges_.size() + faces_.size());
     }
 
     int triMesh::genus() const {
-        const int χ = euler_characteristic();
+        const int chi = euler_characteristic();
         const int b = has_boundary() ? compute_number_of_holes() : 0;
-        return (2 - b - χ) / 2;
+        return (2 - b - chi) / 2;
     }
 
     bool triMesh::is_edge_manifold() const {
