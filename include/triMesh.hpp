@@ -208,8 +208,6 @@ namespace halfMesh {
         // STL I/O
         void write_stl_ascii(const std::string &filename) const;
 
-        void write_stl_binary(const std::string &filename) const;
-
         void read_stl(const std::string &filename);
 
         void read_stl_ascii(const std::string &filename);

@@ -23,7 +23,65 @@ triMesh create_mesh() {
     return mesh;
 }
 
+triMesh interviewMesh() {
+    triMesh mesh;
+
+    const auto v1 = mesh.add_vertex(0.0, 0.5, 0.0);
+    const auto v2 = mesh.add_vertex(0.5, 1.0, 0.0);
+    const auto v3 = mesh.add_vertex(0.5, 1.0, 0.0);
+    const auto v4 = mesh.add_vertex(1.0, 0.5, 0.0);
+    const auto v5 = mesh.add_vertex(0.5, 0.0, 0.0);
+    const auto v6 = mesh.add_vertex(0.5, 0.0, 0.0);
+
+    // 1,2,6
+    mesh.add_face(v1, v2, v6);
+    // 5,3,4
+    mesh.add_face(v5, v3, v4);
+
+    mesh.complete_mesh();
+
+    mesh.save("interview_dups.stl");
+
+    return mesh;
+}
+
+triMesh interviewMesh2() {
+    triMesh mesh;
+
+    const auto v1 = mesh.add_vertex(0.0, 0.5, 0.0);
+    const auto v2 = mesh.add_vertex(0.5, 1.0, 0.0);
+    // const auto v3 = mesh.add_vertex(0.5, 1.0, 0.0);
+    const auto v4 = mesh.add_vertex(1.0, 0.5, 0.0);
+    // const auto v5 = mesh.add_vertex(0.5, 0.0, 0.0);
+    const auto v6 = mesh.add_vertex(0.5, 0.0, 0.0);
+
+    // 1,2,6
+    mesh.add_face(v1, v2, v6);
+    // 5,3,4
+    mesh.add_face(v6, v2, v4);
+
+    mesh.complete_mesh();
+
+    return mesh;
+}
+
+void stlReadWriteTest() {
+    triMesh mesh;
+    mesh.read("/home/vijai/schutzDrive/Documents/GEOMETRIES/nut_sample.stl");
+    mesh.save("interview_mesh_new.stl");
+}
+
+void meshSplitTest() {
+    auto interview = interviewMesh();
+    std::cout << "Num Components : " << interviewMesh().num_connected_components() << std::endl;
+
+    auto interview2 = interviewMesh2();
+    std::cout << "Num Components : " << interviewMesh2().num_connected_components() << std::endl;
+}
+
 int main() {
+    stlReadWriteTest();
+
     const auto mesh = create_mesh();
 
     std::cout << mesh << std::endl;
