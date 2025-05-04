@@ -15,7 +15,7 @@ namespace halfMesh {
         ~vertex() = default;
 
         //— Accessors ——
-        unsigned int handle() const { return handle_; }
+        unsigned int get_handle() const { return handle_; }
         double get_x() const { return x_; }
         double get_y() const { return y_; }
         double get_z() const { return z_; }

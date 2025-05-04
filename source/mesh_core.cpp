@@ -55,7 +55,7 @@ namespace halfMesh {
     halfEdgePtr triMesh::add_half_edge(const vertexPtr &v1,
                                           const vertexPtr &v2,
                                           const facePtr &f) {
-        const HalfEdgeKey key{v1->handle(), v2->handle()};
+        const HalfEdgeKey key{v1->get_handle(), v2->get_handle()};
         if (const auto it = half_edge_lookup_.find(key); it != half_edge_lookup_.end())
             return it->second;
 
@@ -65,7 +65,7 @@ namespace halfMesh {
         he->set_parent_face(f);
 
         // link opposites
-        const auto rev = std::make_pair(v2->handle(), v1->handle());
+        const auto rev = std::make_pair(v2->get_handle(), v1->get_handle());
         if (const auto rit = half_edge_lookup_.find(rev); rit != half_edge_lookup_.end()) {
             const auto opp = rit->second;
             he->set_opposing_half_edge(opp);
@@ -84,7 +84,7 @@ namespace halfMesh {
     edgePtr triMesh::add_edge(const vertexPtr &v1,
                                  const vertexPtr &v2,
                                  const facePtr &f) {
-        const auto key = make_edge_key(v1->handle(), v2->handle());
+        const auto key = make_edge_key(v1->get_handle(), v2->get_handle());
         if (const auto it = edge_lookup_.find(key); it != edge_lookup_.end()) {
             const auto e = handle_to_edge_[it->second];
             const auto he = add_half_edge(v1, v2, f);
@@ -114,7 +114,7 @@ namespace halfMesh {
     facePtr triMesh::add_face(const vertexPtr &v1,
                                  const vertexPtr &v2,
                                  const vertexPtr &v3) {
-        const auto key = make_face_key(v1->handle(), v2->handle(), v3->handle());
+        const auto key = make_face_key(v1->get_handle(), v2->get_handle(), v3->get_handle());
         if (const auto it = face_lookup_.find(key); it != face_lookup_.end())
             return handle_to_face_[it->second];
 

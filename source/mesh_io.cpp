@@ -113,13 +113,13 @@ namespace halfMesh {
         out << "$MeshFormat\n2.2 0 " << sizeof(double) << "\n$EndMeshFormat\n";
         out << "$Nodes\n" << vertices_.size() << "\n";
         for (auto &v: vertices_)
-            out << v->handle() + 1 << " " << v->get_x() << " " << v->get_y() << " "
+            out << v->get_handle() + 1 << " " << v->get_x() << " " << v->get_y() << " "
                     << v->get_z() << "\n";
         out << "$EndNodes\n$Elements\n" << faces_.size() << "\n";
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
-            out << f->handle() + 1 << " 2 2 0 1 "
-                    << a->handle() + 1 << " " << b->handle() + 1 << " " << c->handle() + 1 << "\n";
+            out << f->get_handle() + 1 << " 2 2 0 1 "
+                    << a->get_handle() + 1 << " " << b->get_handle() + 1 << " " << c->get_handle() + 1 << "\n";
         }
         out << "$EndElements\n";
     }
@@ -130,7 +130,7 @@ namespace halfMesh {
             out << "v " << v->get_x() << " " << v->get_y() << " " << v->get_z() << "\n";
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
-            out << "f " << a->handle() + 1 << " " << b->handle() + 1 << " " << c->handle() + 1 << "\n";
+            out << "f " << a->get_handle() + 1 << " " << b->get_handle() + 1 << " " << c->get_handle() + 1 << "\n";
         }
     }
 
@@ -140,7 +140,7 @@ namespace halfMesh {
             js["VERTICES"].push_back({v->get_x(), v->get_y(), v->get_z()});
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
-            js["FACES"].push_back({a->handle(), b->handle(), c->handle()});
+            js["FACES"].push_back({a->get_handle(), b->get_handle(), c->get_handle()});
         }
         js["VERTEX_PROPERTIES"] = vertex_data_store;
         js["EDGE_PROPERTIES"]   = edge_data_store;
@@ -163,7 +163,7 @@ namespace halfMesh {
         out << "POLYGONS " << faces_.size() << " " << faces_.size() * 4 << "\n";
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
-            out << "3 " << a->handle() << " " << b->handle() << " " << c->handle() << "\n";
+            out << "3 " << a->get_handle() << " " << b->get_handle() << " " << c->get_handle() << "\n";
         }
     }
 
@@ -180,7 +180,7 @@ namespace halfMesh {
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
             // normal
-            vertex n = get_face_normal(f->handle());
+            vertex n = get_face_normal(f->get_handle());
             double nx = n.get_x(), ny = n.get_y(), nz = n.get_z();
             double len = std::sqrt(nx * nx + ny * ny + nz * nz);
             if (len > 0) {
@@ -219,7 +219,7 @@ namespace halfMesh {
         for (auto &f: faces_) {
             auto [a,b,c] = f->get_vertices();
             // normal
-            vertex n = get_face_normal(f->handle());
+            vertex n = get_face_normal(f->get_handle());
             double nx = n.get_x(), ny = n.get_y(), nz = n.get_z();
             if (double len = std::sqrt(nx * nx + ny * ny + nz * nz); len > 0) {
                 nx /= len;

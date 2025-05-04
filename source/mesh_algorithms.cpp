@@ -9,7 +9,7 @@ namespace halfMesh {
         std::unordered_set<unsigned> visited;
         std::vector<facePtr> stack;
         stack.push_back(faces_[0]);
-        visited.insert(faces_[0]->handle());
+        visited.insert(faces_[0]->get_handle());
 
         while (!stack.empty()) {
             auto f = stack.back();
@@ -25,7 +25,7 @@ namespace halfMesh {
                 if (! opposingHalfEdge)
                     continue; // boundary, no neighbor
 
-                if (auto nf = opposingHalfEdge->get_parent_face(); nf && visited.insert(nf->handle()).second) {
+                if (auto nf = opposingHalfEdge->get_parent_face(); nf && visited.insert(nf->get_handle()).second) {
                     stack.push_back(nf);
                 }
             }
@@ -38,9 +38,10 @@ namespace halfMesh {
     unsigned triMesh::compute_number_of_holes() const {
         // collect boundary half-edges
         std::vector<halfEdgePtr> boundaries;
-        for (auto &he: half_edges_)
+        for (auto &he: half_edges_) {
             if (he->is_boundary())
                 boundaries.push_back(he);
+        }
 
         std::unordered_set<unsigned> used;
         unsigned loops = 0;

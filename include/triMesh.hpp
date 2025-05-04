@@ -14,6 +14,7 @@
 #include "half_edge.hpp"
 #include "edge.hpp"
 #include "face.hpp"
+#include "stream_utilities.hpp"
 
 namespace halfMesh {
     class triMesh {
@@ -75,7 +76,7 @@ namespace halfMesh {
             if (vertex_data_store.contains(name))
                 return PropertyStatus::Exists;
             for (auto &v: vertices_)
-                vertex_data_store[name][v->handle()] = init;
+                vertex_data_store[name][v->get_handle()] = init;
             return PropertyStatus::Added;
         }
 
@@ -93,7 +94,7 @@ namespace halfMesh {
             if (face_data_store.contains(name))
                 return PropertyStatus::Exists;
             for (auto &f: faces_)
-                face_data_store[name][f->handle()] = init;
+                face_data_store[name][f->get_handle()] = init;
             return PropertyStatus::Added;
         }
 
@@ -233,4 +234,17 @@ namespace halfMesh {
         unsigned next_edge_handle_ = 0;
         unsigned next_face_handle_ = 0;
     };
+
+    inline std::ostream& operator<<(std::ostream& os, triMesh const& m) {
+        os << "triMesh(V=" << m.get_vertices().size()
+           << ", E=" << m.get_edges().size()
+           << ", HE=" << m.get_half_edges().size()
+           << ", F=" << m.get_faces().size() << ")";
+        return os;
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, std::shared_ptr<triMesh> const& p) {
+        return p ? os << *p : os << "triMesh(nullptr)";
+    }
+
 } // namespace HalfMesh

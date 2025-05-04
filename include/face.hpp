@@ -18,7 +18,7 @@ namespace halfMesh {
         ~face() = default;
 
         //— Accessors ——
-        unsigned int handle() const { return handle_; }
+        unsigned int get_handle() const { return handle_; }
         bool is_valid() const { return handle_ != std::numeric_limits<unsigned int>::max(); }
 
         std::tuple<std::shared_ptr<vertex>,

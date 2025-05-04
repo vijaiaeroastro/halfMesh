@@ -22,6 +22,7 @@ set(SRCS
 # Header files (for IDE integration only)
 set(HDRS
         include/common.hpp
+        include/stream_utilities.hpp
         include/connectivity.hpp
         include/vertex.hpp
         include/half_edge.hpp

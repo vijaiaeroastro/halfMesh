@@ -63,7 +63,7 @@ namespace halfMesh {
             if (! opposingHalfEdge)
                 continue;
             // skip if it's the same face
-            if (auto nf = opposingHalfEdge->get_parent_face(); nf && nf->handle() != f->handle())
+            if (auto nf = opposingHalfEdge->get_parent_face(); nf && nf->get_handle() != f->get_handle())
                 out.insert(nf);
         }
         return out;

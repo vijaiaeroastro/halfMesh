@@ -26,6 +26,8 @@ triMesh create_mesh() {
 int main() {
     const auto mesh = create_mesh();
 
+    std::cout << mesh << std::endl;
+
     // --- Basic counts ---
     assert(mesh.get_vertices().size()    == 5);
     assert(mesh.get_faces().size()       == 3);
@@ -58,9 +60,7 @@ int main() {
     std::cout << "All tests passed!\n\n";
 
     // --- Optional diagnostics ---
-    std::cout << "Mesh vertices : " << mesh.get_vertices().size() << "\n"
-              << "Mesh faces    : " << mesh.get_faces().size()    << "\n"
-              << "Multiply Connected? "
+    std::cout << "Multiply Connected? "
               << (mesh.is_multiply_connected() ? "Yes" : "No")
               << "\n\n";
 
@@ -69,33 +69,33 @@ int main() {
         auto start = f->get_one_half_edge();
         if (!start) continue;
 
-        std::cout << "Face " << f->handle() << ": ";
+        std::cout << f << " : ";
         auto he = start;
         do {
-            std::cout << he->get_handle() << " ";
+            std::cout << he << " ";
             he = mesh.get_next_half_edge(he, f);
             if (!he) break;
         } while (he != start);
-        std::cout << "\n";
+        std::cout << std::endl;
     }
-    std::cout << "\n";
+    std::cout << std::endl;
 
     // Loop each vertex’s incoming/outgoing half-edges
     for (auto& v : mesh.get_vertices()) {
         auto inc = v->get_incoming_half_edges();
         auto out = v->get_outgoing_half_edges();
-        std::cout << "Vertex " << v->handle()
+        std::cout << v
                   << " inc:" << inc.size()
-                  << " out:" << out.size() << "\n";
+                  << " out:" << out.size() << std::endl;
     }
-    std::cout << "\n";
+    std::cout << std::endl;
 
     // Count boundary edges
     {
         size_t count = 0;
         for (auto& e : mesh.get_edges())
             if (e->is_boundary()) ++count;
-        std::cout << "Boundary edges: " << count << "\n";
+        std::cout << "Boundary edges: " << count << std::endl;
     }
 
     // Count boundary half-edges
@@ -103,7 +103,7 @@ int main() {
         size_t count = 0;
         for (auto& he : mesh.get_half_edges())
             if (he->is_boundary()) ++count;
-        std::cout << "Boundary half-edges: " << count << "\n";
+        std::cout << "Boundary half-edges: " << count << std::endl;
     }
 
     return 0;
