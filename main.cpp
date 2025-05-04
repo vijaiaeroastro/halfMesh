@@ -80,8 +80,6 @@ void meshSplitTest() {
 }
 
 int main() {
-    stlReadWriteTest();
-
     const auto mesh = create_mesh();
 
     std::cout << mesh << std::endl;
