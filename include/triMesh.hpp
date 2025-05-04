@@ -63,6 +63,22 @@ namespace halfMesh {
 
         unsigned compute_number_of_holes() const;
 
+        bool has_boundary() const;
+
+        int euler_characteristic() const;
+
+        int genus() const;
+
+        bool is_edge_manifold() const;
+
+        bool is_manifold() const;
+
+        bool is_oriented() const;
+
+        bool is_triangular() const;
+
+        size_t num_connected_components() const;
+
         // Geometry queries
         double get_area(unsigned face_handle) const;
 

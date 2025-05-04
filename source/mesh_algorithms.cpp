@@ -1,38 +1,11 @@
 #include "triMesh.hpp"
 #include <unordered_set>
+#include <queue>
 #include <vector>
 
 namespace halfMesh {
     bool triMesh::is_multiply_connected() const {
-        if (faces_.empty()) return false;
-
-        std::unordered_set<unsigned> visited;
-        std::vector<facePtr> stack;
-        stack.push_back(faces_[0]);
-        visited.insert(faces_[0]->get_handle());
-
-        while (!stack.empty()) {
-            auto f = stack.back();
-            stack.pop_back();
-
-            // Start with the face's stored half-edge
-            auto he = f->get_one_half_edge();
-            // Walk the three edges of this triangle
-            for (int i = 0; i < 3 && he; ++i) {
-                if (i > 0) he = get_next_half_edge(he, f);
-
-                auto opposingHalfEdge = he->get_opposing_half_edge();
-                if (! opposingHalfEdge)
-                    continue; // boundary, no neighbor
-
-                if (auto nf = opposingHalfEdge->get_parent_face(); nf && visited.insert(nf->get_handle()).second) {
-                    stack.push_back(nf);
-                }
-            }
-        }
-
-        // If we reached every face, it's simply connected
-        return visited.size() != faces_.size();
+        return num_connected_components() > 1;
     }
 
     unsigned triMesh::compute_number_of_holes() const {
@@ -65,5 +38,120 @@ namespace halfMesh {
             ++loops;
         }
         return loops;
+    }
+
+    bool triMesh::has_boundary() const {
+        for (auto &e: edges_) {
+            if (e->is_boundary()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    int triMesh::euler_characteristic() const {
+        return vertices_.size()  - edges_.size() + faces_.size();
+    }
+
+    int triMesh::genus() const {
+        const int χ = euler_characteristic();
+        const int b = has_boundary() ? compute_number_of_holes() : 0;
+        return (2 - b - χ) / 2;
+    }
+
+    bool triMesh::is_edge_manifold() const {
+        for (auto &e: edges_) {
+            const auto he0 = e->get_one_half_edge();
+            if (!he0) continue;
+            int count = 1;
+            if (he0->get_opposing_half_edge()) ++count;
+            if (count > 2) return false;
+        }
+        return true;
+    }
+
+    bool triMesh::is_manifold() const {
+        if (!is_edge_manifold()) return false;
+
+        for (auto &v: vertices_) {
+            auto inc_faces = one_ring_faces_of_a_vertex(v);
+            if (inc_faces.empty()) continue;
+
+            std::unordered_set<unsigned> seen;
+            std::queue<facePtr> Q;
+            auto it = inc_faces.begin();
+            Q.push(*it);
+            seen.insert((*it)->get_handle());
+
+            while (!Q.empty()) {
+                auto f = Q.front();
+                Q.pop();
+                for (auto &nbr: adjacent_faces(f)) {
+                    if (inc_faces.count(nbr) == 0) continue;
+                    unsigned h = nbr->get_handle();
+                    if (seen.insert(h).second)
+                        Q.push(nbr);
+                }
+            }
+
+            if (seen.size() != inc_faces.size())
+                return false;
+        }
+
+        return true;
+    }
+
+    bool triMesh::is_oriented() const {
+        for (auto &he: half_edges_) {
+            const auto opp = he->get_opposing_half_edge();
+            if (!opp) continue;
+            const auto a1 = he->get_vertex_one();
+            const auto b1 = he->get_vertex_two();
+            const auto a2 = opp->get_vertex_one();
+            const auto b2 = opp->get_vertex_two();
+            if (!(a1 && b1 && a2 && b2)) return false;
+            if (a1->get_handle() != b2->get_handle() ||
+                b1->get_handle() != a2->get_handle())
+                return false;
+        }
+        return true;
+    }
+
+    bool triMesh::is_triangular() const {
+        return true;
+    }
+
+    size_t triMesh::num_connected_components() const {
+        const size_t N = vertices_.size();
+        std::vector<char> visited(N, 0);
+        size_t comps = 0;
+
+        for (auto &v0: vertices_) {
+            const unsigned h0 = v0->get_handle();
+            if (visited[h0]) continue;
+            ++comps;
+            std::queue<vertexPtr> Q;
+            Q.push(v0);
+            visited[h0] = 1;
+
+            while (!Q.empty()) {
+                const auto v = Q.front();
+                Q.pop();
+                for (const auto &he: v->get_outgoing_half_edges()) {
+                    if (auto w = he->get_vertex_two(); w && !visited[w->get_handle()]) {
+                        visited[w->get_handle()] = 1;
+                        Q.push(w);
+                    }
+                }
+                for (const auto &he: v->get_incoming_half_edges()) {
+                    if (auto w = he->get_vertex_one(); w && !visited[w->get_handle()]) {
+                        visited[w->get_handle()] = 1;
+                        Q.push(w);
+                    }
+                }
+            }
+        }
+
+        return comps;
     }
 } // namespace HalfMesh

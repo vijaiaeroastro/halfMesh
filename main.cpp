@@ -63,6 +63,9 @@ int main() {
     std::cout << "Multiply Connected? "
               << (mesh.is_multiply_connected() ? "Yes" : "No")
               << "\n\n";
+    std::cout << "N Components : " << mesh.num_connected_components() << std::endl;
+    std::cout << "Genus        : " << mesh.genus() << std::endl;
+    std::cout << "Is Manifold  : " << mesh.is_manifold() << std::endl;
 
     // Loop each face’s half-edge cycle
     for (auto& f : mesh.get_faces()) {
