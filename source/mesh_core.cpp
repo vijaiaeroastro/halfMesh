@@ -53,8 +53,8 @@ namespace halfMesh {
     }
 
     halfEdgePtr triMesh::add_half_edge(const vertexPtr &v1,
-                                          const vertexPtr &v2,
-                                          const facePtr &f) {
+                                       const vertexPtr &v2,
+                                       const facePtr &f) {
         const HalfEdgeKey key{v1->get_handle(), v2->get_handle()};
         if (const auto it = half_edge_lookup_.find(key); it != half_edge_lookup_.end())
             return it->second;
@@ -82,8 +82,8 @@ namespace halfMesh {
     }
 
     edgePtr triMesh::add_edge(const vertexPtr &v1,
-                                 const vertexPtr &v2,
-                                 const facePtr &f) {
+                              const vertexPtr &v2,
+                              const facePtr &f) {
         const auto key = make_edge_key(v1->get_handle(), v2->get_handle());
         if (const auto it = edge_lookup_.find(key); it != edge_lookup_.end()) {
             const auto e = handle_to_edge_[it->second];
@@ -112,8 +112,8 @@ namespace halfMesh {
     }
 
     facePtr triMesh::add_face(const vertexPtr &v1,
-                                 const vertexPtr &v2,
-                                 const vertexPtr &v3) {
+                              const vertexPtr &v2,
+                              const vertexPtr &v3) {
         const auto key = make_face_key(v1->get_handle(), v2->get_handle(), v3->get_handle());
         if (const auto it = face_lookup_.find(key); it != face_lookup_.end())
             return handle_to_face_[it->second];
@@ -137,13 +137,191 @@ namespace halfMesh {
         return f;
     }
 
+    // --- delete_face --------------------------------------------------
+    bool triMesh::delete_face(const facePtr &f) {
+        // 1) Ensure it’s in our face list
+        const auto fit = std::find(faces_.begin(), faces_.end(), f);
+        if (fit == faces_.end()) {
+            return false;
+        }
+
+        // 2) Unhook its three half‑edges
+        if (const halfEdgePtr startHE = f->get_one_half_edge()) {
+            halfEdgePtr he = startHE;
+            // walk exactly 3 steps
+            for (int i = 0; i < 3 && he; ++i) {
+                const halfEdgePtr nextHE = get_next_half_edge(he, f);
+
+                // sever opposing link
+                if (const auto opp = he->get_opposing_half_edge()) {
+                    opp->set_opposing_half_edge(nullptr);
+                }
+
+
+                // erase from lookup
+                HalfEdgeKey key{
+                    he->get_vertex_one()->get_handle(),
+                    he->get_vertex_two()->get_handle()
+                };
+                half_edge_lookup_.erase(key);
+
+                // erase from storage
+                handle_to_half_edge_.erase(he->get_handle());
+                half_edges_.erase(
+                    std::remove(half_edges_.begin(), half_edges_.end(), he),
+                    half_edges_.end()
+                );
+
+                he = nextHE;
+            }
+        }
+
+        // 3) Remove from face lookup map
+        auto [a,b,c] = f->get_vertices();
+        const FaceKey fk = make_face_key(a->get_handle(), b->get_handle(), c->get_handle());
+        face_lookup_.erase(fk);
+
+        // 4) Finally erase the face itself
+        handle_to_face_.erase(f->get_handle());
+        faces_.erase(fit);
+
+        return true;
+    }
+
+    // --- delete_edge --------------------------------------------------
+    bool triMesh::delete_edge(const edgePtr &e) {
+        const auto eit = std::find(edges_.begin(), edges_.end(), e);
+        if (eit == edges_.end()) {
+            return false;
+        }
+
+        // 1) Grab its two half‑edges
+        const halfEdgePtr he0 = e->get_one_half_edge();
+        std::vector<halfEdgePtr> hes;
+        if (he0) {
+            hes.push_back(he0);
+        }
+        if (he0 && he0->get_opposing_half_edge()) {
+            hes.push_back(he0->get_opposing_half_edge());
+        }
+
+        // 2) Unhook each
+        for (auto &he: hes) {
+            // sever parent_edge link
+            he->set_parent_edge(nullptr);
+            // sever opposing
+            if (const auto opp = he->get_opposing_half_edge()) {
+                opp->set_opposing_half_edge(nullptr);
+            }
+
+            // erase from lookup
+            HalfEdgeKey key{
+                he->get_vertex_one()->get_handle(),
+                he->get_vertex_two()->get_handle()
+            };
+            half_edge_lookup_.erase(key);
+
+            // erase from storage
+            handle_to_half_edge_.erase(he->get_handle());
+            half_edges_.erase(
+                std::remove(half_edges_.begin(), half_edges_.end(), he),
+                half_edges_.end()
+            );
+        }
+
+        // 3) Remove from edge lookup map
+        {
+            const auto v1 = e->get_vertex_one()->get_handle();
+            const auto v2 = e->get_vertex_two()->get_handle();
+            const EdgeKey ek = make_edge_key(v1, v2);
+            edge_lookup_.erase(ek);
+        }
+
+        // 4) Finally erase the edge itself
+        handle_to_edge_.erase(e->get_handle());
+        edges_.erase(eit);
+
+        return true;
+    }
+
+    // --- delete_vertex ------------------------------------------------
+    bool triMesh::delete_vertex(const vertexPtr &v) {
+        const auto vit = std::find(vertices_.begin(), vertices_.end(), v);
+        if (vit == vertices_.end()) {
+            return false;
+        }
+
+        // 1) Collect all incident faces
+        std::unordered_set<facePtr> facesToDel;
+        for (const auto &he: v->get_outgoing_half_edges()) {
+            if (auto f = he->get_parent_face()) {
+                facesToDel.insert(f);
+            }
+        }
+        for (const auto &he: v->get_incoming_half_edges()) {
+            if (auto f = he->get_parent_face()) {
+                facesToDel.insert(f);
+            }
+        }
+
+
+        // 2) Delete them
+        for (auto &f: facesToDel) {
+            delete_face(f);
+        }
+
+        // 3) Collect any remaining edges touching v
+        std::vector<edgePtr> edgesToDel;
+        for (auto &e: edges_) {
+            if (e->get_vertex_one() == v || e->get_vertex_two() == v) {
+                edgesToDel.push_back(e);
+            }
+        }
+
+        // 4) Delete those edges
+        for (auto &e: edgesToDel) {
+            delete_edge(e);
+        }
+
+        // 5) Finally erase the vertex itself
+        handle_to_vertex_.erase(v->get_handle());
+        vertices_.erase(vit);
+
+        return true;
+    }
+
+    int triMesh::remove_unreferenced_vertices() {
+        // 1) Gather all vertices that have no incident half‑edges
+        std::vector<vertexPtr> toRemove;
+        toRemove.reserve(vertices_.size());
+        for (auto& v : vertices_) {
+            if (v->get_incoming_half_edges().empty()
+             && v->get_outgoing_half_edges().empty()) {
+                toRemove.push_back(v);
+             }
+        }
+
+        // 2) Delete each one
+        for (auto& v : toRemove) {
+            // our delete_vertex will also clean up maps & vectors
+            delete_vertex(v);
+        }
+
+        // 3) Return how many we removed
+        return toRemove.size();
+    }
+
     void triMesh::complete_mesh() {
         if (faces_.empty()) return;
 
+        // Remove unreferenced vertices
+        if (const auto nRemoved = remove_unreferenced_vertices(); nRemoved > 0) {
+            std::cout << "removed " << nRemoved << " unreferenced vertices" << std::endl;
+        }
+
         // mark half-edge boundaries
-        for (auto& he : half_edges_) {
-            const auto currentOppositeHE = he->get_opposing_half_edge();
-            if (! currentOppositeHE) {
+        for (const auto &he: half_edges_) {
+            if (const auto currentOppositeHE = he->get_opposing_half_edge(); !currentOppositeHE) {
                 he->set_boundary(true);
             } else {
                 he->set_boundary(false);
@@ -151,7 +329,7 @@ namespace halfMesh {
         }
 
         // mark edge boundaries
-        for (auto& e : edges_) {
+        for (const auto &e: edges_) {
             e->set_boundary(
                 e->get_one_half_edge()->is_boundary()
             );

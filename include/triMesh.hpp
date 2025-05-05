@@ -157,6 +157,16 @@ namespace halfMesh {
             return face_data_store.at(name).at(h).get<T>();
         }
 
+        // Deletors
+        bool delete_face(const facePtr &f);
+
+        bool delete_edge(const edgePtr &e);
+
+        bool delete_vertex(const vertexPtr &v);
+
+        int remove_unreferenced_vertices();
+
+
         // Helpers
         vertexPtr get_vertex(unsigned h) const;
 
@@ -249,16 +259,15 @@ namespace halfMesh {
         unsigned next_face_handle_ = 0;
     };
 
-    inline std::ostream& operator<<(std::ostream& os, triMesh const& m) {
+    inline std::ostream &operator<<(std::ostream &os, triMesh const &m) {
         os << "triMesh(V=" << m.get_vertices().size()
-           << ", E=" << m.get_edges().size()
-           << ", HE=" << m.get_half_edges().size()
-           << ", F=" << m.get_faces().size() << ")";
+                << ", E=" << m.get_edges().size()
+                << ", HE=" << m.get_half_edges().size()
+                << ", F=" << m.get_faces().size() << ")";
         return os;
     }
 
-    inline std::ostream& operator<<(std::ostream& os, std::shared_ptr<triMesh> const& p) {
+    inline std::ostream &operator<<(std::ostream &os, std::shared_ptr<triMesh> const &p) {
         return p ? os << *p : os << "triMesh(nullptr)";
     }
-
 } // namespace HalfMesh
