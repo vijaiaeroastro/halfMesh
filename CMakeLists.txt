@@ -10,13 +10,6 @@ set(CMAKE_CXX_EXTENSIONS      OFF)
 option(BUILD_TESTS "Build the halfMeshTest executable" ON)
 option(BUILD_SHARED_LIBS "Build Shared library" OFF)
 
-# Include Nlohmann JSON directory
-include_directories(deps/nlohmann-3.12.0)
-
-# Add Eigen to the project (Self contained)
-find_package( Eigen3 3.4 REQUIRED NO_MODULE
-        PATHS ${CMAKE_CURRENT_SOURCE_DIR}/deps/eigen-3.4.0)
-
 # Source files
 set(SRCS
         source/mesh_core.cpp
@@ -51,13 +44,12 @@ else()
     )
 endif()
 
-# Link to Eigen3
-target_link_libraries(halfMesh Eigen3::Eigen)
-
 # Where to find your headers
 target_include_directories(halfMesh
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/eigen-3.4.0>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/nlohmann-3.12.0>
         $<INSTALL_INTERFACE:include>
 )
 
