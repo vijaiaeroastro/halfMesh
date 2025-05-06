@@ -14,8 +14,8 @@ option(BUILD_SHARED_LIBS "Build Shared library" OFF)
 include_directories(deps/nlohmann-3.12.0)
 
 # Add Eigen to the project (Self contained)
-add_subdirectory(deps/eigen-3.4.0)
-find_package(Eigen3 REQUIRED)
+find_package( Eigen3 3.4 REQUIRED NO_MODULE
+        PATHS ${CMAKE_CURRENT_SOURCE_DIR}/deps/eigen-3.4.0)
 
 # Source files
 set(SRCS
