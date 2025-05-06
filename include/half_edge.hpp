@@ -34,6 +34,13 @@ namespace halfMesh {
         bool is_boundary() const { return boundary_; }
         void set_boundary(const bool b) { boundary_ = b; }
 
+        // ——— new next/prev API ———
+        halfEdgePtr next() const   { return next_.lock(); }
+        halfEdgePtr prev() const   { return prev_.lock(); }
+
+        void set_next(const halfEdgePtr& h) { next_ = h; }
+        void set_prev(const halfEdgePtr& h) { prev_ = h; }
+
     private:
         // ownership of end‐points lives in triMesh::vertices_
         std::weak_ptr<vertex> v1_, v2_;
@@ -47,5 +54,8 @@ namespace halfMesh {
         std::weak_ptr<halfedge> opposing_;
 
         bool boundary_ = false;
+
+        // <— new fields —
+        std::weak_ptr<halfedge> next_, prev_;
     };
 } // namespace HalfMesh

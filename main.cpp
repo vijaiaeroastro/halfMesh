@@ -60,6 +60,9 @@ int main() {
     triMesh mesh;
     mesh.read("../data/Sphere.stl");
     mesh.delete_face(mesh.get_face(0));
+    std::cout << "Sphere surface area : " << mesh.surface_area() << std::endl;
+    auto bbox = mesh.axis_aligned_bounding_box();
+    std::cout << "Bbox : " << bbox.min() << " / " << bbox.max() << std::endl;
     // mesh.delete_vertex(mesh.get_vertex(5));
     // mesh.delete_vertex(mesh.get_vertex(10));
     mesh.save("sphere_out.stl");

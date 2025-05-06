@@ -112,11 +112,14 @@ namespace halfMesh {
     }
 
     facePtr triMesh::add_face(const vertexPtr &v1,
-                              const vertexPtr &v2,
-                              const vertexPtr &v3) {
-        const auto key = make_face_key(v1->get_handle(), v2->get_handle(), v3->get_handle());
-        if (const auto it = face_lookup_.find(key); it != face_lookup_.end())
+                          const vertexPtr &v2,
+                          const vertexPtr &v3) {
+        const auto key = make_face_key(v1->get_handle(),
+                                       v2->get_handle(),
+                                       v3->get_handle());
+        if (const auto it = face_lookup_.find(key); it != face_lookup_.end()) {
             return handle_to_face_[it->second];
+        }
 
         // 1) create the Face
         auto f = std::make_shared<face>(v1, v2, v3);
@@ -126,13 +129,29 @@ namespace halfMesh {
         handle_to_face_[fh] = f;
         face_lookup_[key] = fh;
 
-        // 2) add the other two edges
-        const auto fE1 = add_edge(v1, v2, f);
-        const auto fE2 = add_edge(v2, v3, f);
-        const auto fE3 = add_edge(v3, v1, f);
+        // 2) create (or reuse) the three half‐edges via add_edge()
+        //    add_edge will call add_half_edge under the hood
+        const auto e1 = add_edge(v1, v2, f);
+        const auto e2 = add_edge(v2, v3, f);
+        const auto e3 = add_edge(v3, v1, f);
 
-        // 3) store one of the half edges on the face
-        f->set_one_half_edge(fE1->get_one_half_edge());
+        // 3) pull out the three half‐edges that bound this face:
+        //    Edge::get_one_half_edge() is guaranteed to be the he in *this* face
+        const auto he1 = e1->get_one_half_edge();
+        const auto he2 = e2->get_one_half_edge();
+        const auto he3 = e3->get_one_half_edge();
+
+        // 4) link them into a ccw cycle around the face
+        he1->set_next(he2);
+        he2->set_next(he3);
+        he3->set_next(he1);
+
+        he1->set_prev(he3);
+        he2->set_prev(he1);
+        he3->set_prev(he2);
+
+        // 5) store one representative half‐edge on f
+        f->set_one_half_edge(he1);
 
         return f;
     }

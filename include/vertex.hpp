@@ -19,6 +19,9 @@ namespace halfMesh {
         double get_x() const { return x_; }
         double get_y() const { return y_; }
         double get_z() const { return z_; }
+        Eigen::Vector3d get_position() const {
+            return Eigen::Vector3d(x_, y_, z_);
+        }
 
         std::vector<std::shared_ptr<halfedge> > get_incoming_half_edges() const {
             std::vector<std::shared_ptr<halfedge> > out;

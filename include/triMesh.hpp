@@ -69,6 +69,8 @@ namespace halfMesh {
 
         int genus() const;
 
+        double surface_area() const;
+
         bool is_edge_manifold() const;
 
         bool is_manifold() const;
@@ -78,6 +80,22 @@ namespace halfMesh {
         bool is_triangular() const;
 
         size_t num_connected_components() const;
+
+        Eigen::AlignedBox3d axis_aligned_bounding_box() const {
+            Eigen::AlignedBox3d box;
+            box.setEmpty();
+
+            // extend to include every vertex
+            for (auto& v : vertices_) {
+                box.extend(Eigen::Vector3d{
+                  v->get_x(),
+                  v->get_y(),
+                  v->get_z()
+                });
+            }
+
+            return box;
+        }
 
         // Geometry queries
         double get_area(unsigned face_handle) const;

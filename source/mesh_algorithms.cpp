@@ -121,6 +121,25 @@ namespace halfMesh {
         return true;
     }
 
+    double triMesh::surface_area() const {
+        double total = 0.0;
+
+        for (const auto &f : faces_) {
+            // unpack the three corner vertices
+            auto [v0, v1, v2] = f->get_vertices();
+
+            // pull out their 3D positions
+            const Eigen::Vector3d p0 = v0->get_position();
+            const Eigen::Vector3d p1 = v1->get_position();
+            const Eigen::Vector3d p2 = v2->get_position();
+
+            // standard triangle area
+            total += 0.5 * (p1 - p0).cross(p2 - p0).norm();
+        }
+
+        return total;
+    }
+
     size_t triMesh::num_connected_components() const {
         const size_t N = vertices_.size();
         std::vector<char> visited(N, 0);
