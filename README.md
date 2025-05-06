@@ -23,7 +23,10 @@ A simple and flexible half‐edge data structure for triangular meshes, with bui
 ## Dependencies
 
 - C++17 (or later)
-- [nlohmann/json](https://github.com/nlohmann/json) for JSON/BSON serialization and property storage
+- [nlohmann/json](https://github.com/nlohmann/json/releases/tag/v3.12.0) for JSON/BSON serialization and property storage (Version 3.12.0)
+- [Eigen](https://gitlab.com/libeigen/eigen/-/releases/3.4.0) for vector arithmetic and basic linear algebra operations (Version 3.4.0)
+
+All dependencies are self contained in the repository and user does not need to install anything.
 
 ## Usage
 

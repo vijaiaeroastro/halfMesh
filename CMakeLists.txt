@@ -10,6 +10,13 @@ set(CMAKE_CXX_EXTENSIONS      OFF)
 option(BUILD_TESTS "Build the halfMeshTest executable" ON)
 option(BUILD_SHARED_LIBS "Build Shared library" OFF)
 
+# Include Nlohmann JSON directory
+include_directories(deps/nlohmann-3.12.0)
+
+# Add Eigen to the project (Self contained)
+add_subdirectory(deps/eigen-3.4.0)
+find_package(Eigen3 REQUIRED)
+
 # Source files
 set(SRCS
         source/mesh_core.cpp
@@ -29,7 +36,6 @@ set(HDRS
         include/edge.hpp
         include/face.hpp
         include/triMesh.hpp
-        include/json.hpp
 )
 
 # Pick shared vs static based on BUILD_SHARED_LIBS
@@ -44,6 +50,9 @@ else()
             ${HDRS}
     )
 endif()
+
+# Link to Eigen3
+target_link_libraries(halfMesh Eigen3::Eigen)
 
 # Where to find your headers
 target_include_directories(halfMesh
